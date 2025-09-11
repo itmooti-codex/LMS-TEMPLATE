@@ -1,0 +1,503 @@
+body {
+  margin: 0 auto;
+  height: 100vh;
+  overflow-y: unset;
+}
+
+#renderForms {
+  width: 100% !important;
+}
+
+body::-webkit-scrollbar {
+  display: none;
+}
+
+.primaryButton {
+  background: #007b8e !important;
+  border: 1px solid #007b8e !important;
+  padding: 0.2rem !important;
+  outline: none !important;
+  margin: 0 !important;
+  border-radius: 4px !important;
+  transition: 0.2s ease-in-out;
+  overflow: hidden;
+}
+
+.primaryButton:hover,
+.primaryButton:active,
+.primaryButton:focus {
+  background: #00505c !important;
+  border: 1px solid #00505c !important;
+  color: white !important;
+  box-shadow: 0px 5px 5px 0px rgba(0, 0, 0, 0.12) !important;
+}
+
+.upVoted {
+  padding: 5px;
+  border: 1px solid #007c8f !important;
+  background: #007c8f;
+  color: white !important;
+}
+
+.student-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.roundedButton {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  border-radius: 12px !important;
+  border: 1px solid #bbbcbb !important;
+  outline: none !important;
+  background: transparent !important;
+  width: max-content !important;
+  padding: 0px 8px !important;
+  transition: 0.2s ease-in-out;
+  color: var(--primary-color) !important;
+  cursor: pointer !important;
+}
+
+#modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+}
+
+/* Dim background */
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Centered dialog */
+.modal-box {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  max-width: 420px;
+  width: calc(100% - 2rem);
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  height: max-content;
+}
+
+/* Title */
+.modal-title {
+  margin: 0 0 10px 0;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Reuse your existing styles */
+.delete-inner-div {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.modal-button {
+  background-color: #547554;
+  color: #fff;
+  padding: 10px 14px;
+  margin: 6px 0;
+  border-radius: 10px;
+  cursor: pointer;
+  border: none;
+}
+
+.modal-button:hover {
+  filter: brightness(0.95);
+}
+
+.createPost {
+  border-radius: 4px;
+  border: 1px solid #d1d5db;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background-color: white;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  transition: border-color 0.2s ease;
+}
+
+.createPost:hover {
+  border-color: #007b8e;
+}
+
+.createPost:focus-within {
+  border-color: #007b8e;
+}
+
+.create-post-buttons {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 5px;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+textarea {
+  width: 100%;
+  overflow: hidden;
+  resize: vertical;
+  min-height: 50px;
+  padding: 10px;
+  border: none;
+  outline: none;
+}
+
+/* Prevent empty contenteditable editors from collapsing */
+.post-input [contenteditable="true"],
+.editor[contenteditable="true"] {
+  min-height: 50px;
+}
+
+/* Show placeholder text for empty contenteditable */
+.post-input [contenteditable="true"]:empty::before {
+  content: attr(placeholder);
+  color: #9ca3af; /* slate-400 */
+  pointer-events: none;
+}
+/* Fallback when browsers insert <br> and :empty no longer matches */
+.post-input [contenteditable="true"]:not([data-has-value])::before {
+  content: attr(placeholder);
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+textarea::placeholder {
+  color: gray;
+  opacity: 1;
+}
+
+/* .hidden {
+    display: none !important;
+} */
+
+textarea:focus-visible {
+  outline: none;
+}
+
+.create-post-buttons span {
+  font-size: 12px;
+  line-height: 12px;
+  font-weight: 600;
+}
+
+.attach-file {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+  background: transparent !important;
+  border: 1px solid #007b8e !important;
+  padding: 0.5rem;
+  outline: none !important;
+  margin: 0 !important;
+  transition: 0.2s ease-in-out;
+  color: #007b8e !important;
+  border-radius: 4px !important;
+  overflow: hidden;
+  flex-wrap: wrap;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.post {
+  flex-direction: row;
+  gap: 0.75rem;
+  color: white;
+  display: flex;
+  align-items: center;
+  background: #007b8e !important;
+  border: 1px solid #007b8e !important;
+  padding: 0.5rem !important;
+  outline: none !important;
+  margin: 0 !important;
+  border-radius: 4px !important;
+  transition: 0.2s ease-in-out;
+  white-space: nowrap;
+  overflow: hidden;
+  flex-wrap: wrap;
+  text-overflow: ellipsis;
+}
+
+.containerForToolbar {
+  width: 100%;
+}
+
+.roundedButton {
+  background: transparent;
+}
+
+.roundedButton svg path {
+  fill: #007c8f;
+}
+
+.roundedButton .vote-count {
+  color: black;
+}
+
+.roundedButton.is-voted {
+  background: #007c8f !important;
+}
+
+.roundedButton.is-voted svg path {
+  fill: white !important;
+}
+
+.roundedButton.is-voted .vote-count {
+  color: white !important;
+}
+
+#post-data {
+  outline: none;
+}
+
+.highlight {
+  color: rgb(69, 134, 177);
+}
+
+.mention {
+  color: rgb(69, 134, 177);
+  font-weight: normal !important;
+}
+
+.mention-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f3f4f6;
+  border-radius: 9999px;
+  padding: 2px 6px;
+  margin: 0 2px;
+  font-size: 0.75rem;
+  line-height: 1.7;
+  cursor: pointer;
+}
+
+.mention-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  /* round image */
+  object-fit: cover;
+}
+
+.posts-input {
+  width: 100%;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.loader-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.loader {
+  border: 6px solid #f3f3f3;
+  border-top: 6px solid #3498db;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  margin: 0 auto 1rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Audio section */
+/* container: like `grow relative` + centering the slider */
+.range-container {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 40px;
+  /* enough height to center the slider */
+}
+
+.seek {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  width: 100%;
+  height: 2px;
+  background: transparent;
+  cursor: pointer;
+  accent-color: #374151;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* WebKit: track + thumb */
+.seek::-webkit-slider-runnable-track {
+  height: 2px;
+  background: #a8b8cf;
+  /* track color */
+  border-radius: 9999px;
+}
+
+.seek::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: #007b8e;
+  border-radius: 50%;
+  border: none;
+  margin-top: calc((2px - 12px) / 2);
+  /* center thumb on 2px track */
+}
+
+/* Firefox */
+.seek::-moz-range-track {
+  height: 2px;
+  background: #e5e7eb;
+  border-radius: 9999px;
+}
+
+.seek::-moz-range-progress {
+  height: 2px;
+  background: #007b8e;
+  /* played portion in Firefox */
+  border-radius: 9999px;
+}
+
+.seek::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #374151;
+  border: none;
+}
+
+/* Optional: remove focus ring if you don't want it */
+.seek:focus {
+  outline: none;
+}
+
+/* Base = mobile styles (0–480px) go here */
+
+/* Tablet */
+@media (min-width: 481px) and (max-width: 768px) {
+  body {
+    width: 100vw;
+    min-width: fit-content;
+  }
+}
+
+/* Laptop */
+@media (min-width: 769px) and (max-width: 1280px) {
+  /* laptop-specific styles */
+}
+
+/* Desktop / PC */
+@media (min-width: 1281px) {
+  /* body {
+        width: 100vw;
+        max-width: 50%;
+        
+    } */
+}
+
+.activeTab,
+.activePostTab {
+  border-bottom: 2px solid #007b8e;
+  color: #007b8e;
+}
+
+#allAnnouncementsContainer {
+  justify-content: center;
+}
+
+.empty-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  /* prevent interaction when hidden */
+  transition: opacity 0.3s ease;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.empty-modal.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.empty-modal-content {
+  background: #007b8e;
+  padding: 25px 40px;
+  border-radius: 15px;
+  font-size: 1.2rem;
+  min-width: 250px;
+  max-width: 400px;
+  text-align: center;
+  color: white;
+  font-weight: bold;
+  font-family: "Times New Roman", Times, serif;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  transform: scale(0.9);
+  transition: transform 0.3s ease;
+}
+
+.empty-modal.show .empty-modal-content {
+  transform: scale(1);
+}
+
+a {
+  color: #00505c;
+}

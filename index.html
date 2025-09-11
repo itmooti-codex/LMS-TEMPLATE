@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test Course 2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsrender@1.0.11/jsrender.min.js"></script>
+    <script type="module" src="mvc/index.js"></script>
+    <link href="index.css" rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/tributejs@5.1.3/dist/tribute.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/tributejs@5.1.3/dist/tribute.js"></script>
+  </head>
+  <body
+    class="bg-gray-50 text-gray-800 font-['DM_Serif_Display'] serif !important"
+  >
+    <!-- Header -->
+    <div class="max-w-6xl mx-auto px-6 py-8">
+      <h1 class="text-2xl font-bold">TEST COURSE 2</h1>
+      <p class="text-gray-600">A course for testing even more things</p>
+
+      <!-- Course details -->
+      <div class="mt-4 grid md:grid-cols-2 gap-8 items-start">
+        <div>
+          <h2 class="font-semibold text-lg mb-2">Course Details</h2>
+          <div
+            class="flex flex-col md:flex-row md:justify-between text-slate-600 gap-6"
+          >
+            <!-- Left column -->
+            <div class="space-y-2">
+              <div class="flex items-center gap-2">
+                <svg
+                  class="w-5 h-5 text-[#007C8F]"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    d="M4 3h12v2H4zM4 7h12v2H4zM4 11h12v2H4zM4 15h12v2H4z"
+                  />
+                </svg>
+                <span class="font-medium">7 Modules</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <svg
+                  class="w-5 h-5 text-[#007C8F]"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    d="M2 4a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V4zm6 2v8l6-4-6-4z"
+                  />
+                </svg>
+                <span class="font-medium">6 hours, 5 min</span>
+              </div>
+            </div>
+
+            <!-- Right column -->
+            <div class="space-y-2">
+              <div class="flex items-center gap-2">
+                <svg
+                  class="w-5 h-5 text-[#007C8F]"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    d="M7.00033 1.16667C5.8466 1.16667 4.71879 1.50879 3.7595 2.14977C2.80021 2.79074 2.05254 3.70178 1.61103 4.76768C1.16952 5.83359 1.054 7.00647 1.27908 8.13803C1.50416 9.26959 2.05973 10.309 2.87554 11.1248C3.69134 11.9406 4.73074 12.4962 5.8623 12.7212C6.99386 12.9463 8.16674 12.8308 9.23265 12.3893C10.2985 11.9478 11.2096 11.2001 11.8506 10.2408C12.4915 9.28154 12.8337 8.15373 12.8337 7C12.832 5.45341 12.2169 3.97063 11.1233 2.87702C10.0297 1.78341 8.54692 1.1683 7.00033 1.16667ZM10.1414 7.44872H7.00033C6.88132 7.44872 6.76719 7.40145 6.68304 7.3173C6.59888 7.23314 6.55161 7.11901 6.55161 7V3.85898C6.55161 3.73997 6.59888 3.62584 6.68304 3.54169C6.76719 3.45754 6.88132 3.41026 7.00033 3.41026C7.11933 3.41026 7.23347 3.45754 7.31762 3.54169C7.40177 3.62584 7.44904 3.73997 7.44904 3.85898V6.55129H10.1414C10.2604 6.55129 10.3745 6.59856 10.4586 6.68271C10.5428 6.76686 10.5901 6.881 10.5901 7C10.5901 7.11901 10.5428 7.23314 10.4586 7.3173C10.3745 7.40145 10.2604 7.44872 10.1414 7.44872Z"
+                    fill="#007C8F"
+                  ></path>
+                </svg>
+                <span class="font-medium px-1">
+                  Access for 12 months from start date
+                </span>
+              </div>
+              <div class="flex items-center gap-2">
+                <svg
+                  class="w-5 h-5 text-[#007C8F]"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    d="M2 5a2 2 0 012-2h3l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V5z"
+                  />
+                </svg>
+                <span class="font-medium">Online Tutor-led</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-start mt-6 gap-3 w-fit flex-[2]">
+            <!-- Resume button -->
+            <button
+              class="flex items-center gap-2 px-5 py-2 bg-[rgb(0_123_142)] text-white rounded-lg hover:bg-[rgb(0_123_142)]/90 font-semibold"
+            >
+              Resume
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                <path d="M6 4l8 6-8 6V4z" />
+              </svg>
+            </button>
+
+            <!-- Resume details -->
+            <div class="flex flex-col text-slate-700 leading-snug flex-1">
+              <p class="text-[rgb(0_123_142)] font-medium">Resume to</p>
+              <p class="w-fit">
+                <span class="font-semibold">Module 3 Assignment</span>
+                ( TEST2 Module 3: Write magnetic beginnings )
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Logo -->
+        <div class="flex justify-center md:justify-end">
+          <img
+            src="assets/265848.e72dd20e40c6e2f547d9c49f5f923c40 (1).png"
+            alt="awc logo"
+            class="h-20"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="border-t border-b bg-[#ebf6f6]/100">
+      <div
+        class="max-w-6xl mx-auto flex justify-center gap-8 py-3 text-gray-700 font-medium"
+      >
+        <a href="#" data-target="overview-section" class="hover:text-sky-600"
+          >📑 Overview</a
+        >
+        <a href="#" data-target="content-section" class="hover:text-sky-600"
+          >📚 Course Content</a
+        >
+        <a href="#" data-target="chat-section" class="hover:text-sky-600"
+          >💬 Course Chat</a
+        >
+        <a
+          href="#"
+          data-target="announcements-section"
+          class="hover:text-sky-600"
+          >📢 Announcements</a
+        >
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-content">
+      <div id="overview-section" class="section max-w-6xl mx-auto px-6 py-8">
+        <h2 class="text-xl font-semibold mb-4">
+          The blueprint for your children’s book
+        </h2>
+        <p class="text-gray-700 mb-4">
+          You’ll discover how to write memorable stories for middle-grade
+          readers. That’s generally readers between eight to thirteen years old.
+        </p>
+        <p class="text-gray-700 mb-6">
+          Books in this age group are very popular and have seen a surge in
+          popularity in recent years. It’s an age when young readers are
+          curious, they love to learn and they enjoy reading about younger
+          protagonists they can relate to. It’s also an age where you can start
+          exploring more complex topics, take your characters on epic adventures
+          and have fun with humour.
+        </p>
+
+        <!-- Discovery Box -->
+        <div class="bg-[#ebf6f6]/100 border rounded-lg p-6">
+          <h3 class="mb-4">You'll discover:</h3>
+          <div class="grid md:grid-cols-2 gap-4 text-gray-700">
+            <ul class="space-y-2 list-none">
+              <li>☑ What you need to know about writing for 8-13 year olds.</li>
+              <li>☑ How to find the right voice.</li>
+              <li>
+                ☑ Tips about writing for young readers – and how to avoid common
+                mistakes.
+              </li>
+              <li>
+                ☑ What you need to know about getting into the children’s
+                publishing market.
+              </li>
+            </ul>
+            <ul class="space-y-2 list-none">
+              <li>
+                ☑ How writing for children differs from writing for adults.
+              </li>
+              <li>
+                ☑ Creating characters and stories young readers will enjoy.
+              </li>
+              <li>☑ How to structure a story that works.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Button -->
+        <div class="mt-6">
+          <a
+            href="#"
+            class="inline-block px-5 py-2 bg-[rgb(0_123_142)] text-white rounded-lg hover:bg-[rgb(0_123_142)]"
+          >
+            Go to Course Content →
+          </a>
+        </div>
+      </div>
+
+      <div id="content-section" class="max-w-6xl mx-auto px-6 py-8 hidden">
+        <p class="text-xs uppercase tracking-wider text-slate-500">
+          Modules &amp; Lessons
+        </p>
+
+        <div class="mt-2 mb-6 flex items-end justify-between">
+          <h1 class="text-2xl font-semibold tracking-tight">Course Content</h1>
+        </div>
+
+        <!-- Modules List -->
+        <!-- top rule like screenshot -->
+        <div class="border-t border-slate-200"></div>
+
+        <!-- MODULE ITEM -->
+        <section class="flex gap-7 items-start py-6 border-b border-slate-200">
+          <!-- LEFT -->
+          <div
+            class="flex items-start gap-3 min-w-[360px] md:flex-[0_0_460px] pl-4"
+          >
+            <!-- lock icon box -->
+            <div
+              class="flex items-center justify-center w-6 h-6 rounded-md border border-cyan-700 text-cyan-700 shrink-0 mt-1"
+            >
+              <!-- unlocked icon -->
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.8"
+                  d="M8 11V8a4 4 0 1 1 8 0m-9 3h10a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2z"
+                />
+              </svg>
+            </div>
+            <div class="flex flex-col gap-2 min-w-0">
+              <h3 class="text-xl leading-snug">TEST2 Start here</h3>
+              <a href="#" class="text-teal-700 font-medium hover:underline"
+                >Unlocked</a
+              >
+            </div>
+          </div>
+
+          <!-- RIGHT -->
+          <div class="flex flex-1 items-start justify-between gap-4">
+            <!-- description (empty for first row) -->
+            <p class="text-slate-600 max-w-[780px]"></p>
+
+            <!-- stats + chevron -->
+            <div class="flex items-center gap-7 shrink-0">
+              <div class="flex items-center gap-6 text-slate-600">
+                <!-- time -->
+                <span class="inline-flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M12 1.75a10.25 10.25 0 1 0 0 20.5 10.25 10.25 0 0 0 0-20.5Zm.75 5.5a.75.75 0 0 0-1.5 0v5.25c0 .2.08.39.22.53l3.25 3.25a.75.75 0 1 0 1.06-1.06l-3.03-3.03V7.25Z"
+                    />
+                  </svg>
+                  <span class="font-semibold text-slate-700">3 min</span>
+                </span>
+                <!-- units -->
+                <span class="inline-flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M4 6.75A1.75 1.75 0 0 1 5.75 5h12.5A1.75 1.75 0 0 1 20 6.75v10.5A1.75 1.75 0 0 1 18.25 19H5.75A1.75 1.75 0 0 1 4 17.25V6.75Zm2 .25v1.5h12V7H6Zm0 3v6.25h12V10H6Z"
+                    />
+                  </svg>
+                  <span class="font-semibold text-slate-700">2 Units</span>
+                </span>
+              </div>
+              <!-- chevron -->
+              <button class="text-slate-500 hover:text-slate-700">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-5 h-5 rotate-0"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M6 9.75 12 15l6-5.25" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- MODULE ITEM -->
+        <section class="flex gap-7 items-start py-6 border-b border-slate-200">
+          <!-- LEFT -->
+          <div
+            class="flex items-start gap-3 min-w-[360px] md:flex-[0_0_460px] pl-4"
+          >
+            <div
+              class="flex items-center justify-center w-6 h-6 rounded-md border border-cyan-700 text-cyan-700 shrink-0 mt-1"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.8"
+                  d="M8 11V8a4 4 0 1 1 8 0m-9 3h10a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2z"
+                />
+              </svg>
+            </div>
+            <div class="flex flex-col gap-2 min-w-0">
+              <h3 class="text-xl leading-snug">
+                TEST2 Module 1: Key elements and characters
+              </h3>
+              <a href="#" class="text-teal-700 font-medium hover:underline"
+                >Unlocked</a
+              >
+            </div>
+          </div>
+
+          <!-- RIGHT -->
+          <div class="flex flex-1 items-start justify-between gap-4">
+            <p class="text-slate-600 max-w-[780px]">
+              In this module, you’ll discover more about the children’s novel
+              and how it fits into publishing for children. We’ll look at what
+              makes writing for this…
+            </p>
+            <div class="flex items-center gap-7 shrink-0">
+              <div class="flex items-center gap-6 text-slate-600">
+                <span class="inline-flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M12 1.75a10.25 10.25 0 1 0 0 20.5 10.25 10.25 0 0 0 0-20.5Zm.75 5.5a.75.75 0 0 0-1.5 0v5.25c0 .2.08.39.22.53l3.25 3.25a.75.75 0 1 0 1.06-1.06l-3.03-3.03V7.25Z"
+                    />
+                  </svg>
+                  <span class="font-semibold text-slate-700">79 min</span>
+                </span>
+                <span class="inline-flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M4 6.75A1.75 1.75 0 0 1 5.75 5h12.5A1.75 1.75 0 0 1 20 6.75v10.5A1.75 1.75 0 0 1 18.25 19H5.75A1.75 1.75 0 0 1 4 17.25V6.75Zm2 .25v1.5h12V7H6Zm0 3v6.25h12V10H6Z"
+                    />
+                  </svg>
+                  <span class="font-semibold text-slate-700">7 Units</span>
+                </span>
+              </div>
+              <button class="text-slate-500 hover:text-slate-700">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-5 h-5 rotate-0"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M6 9.75 12 15l6-5.25" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- MODULE ITEM -->
+        <section class="flex gap-7 items-start py-6 border-b border-slate-200">
+          <div
+            class="flex items-start gap-3 min-w-[360px] md:flex-[0_0_460px] pl-4"
+          >
+            <div
+              class="flex items-center justify-center w-6 h-6 rounded-md border border-cyan-700 text-cyan-700 shrink-0 mt-1"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.8"
+                  d="M8 11V8a4 4 0 1 1 8 0m-9 3h10a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2z"
+                />
+              </svg>
+            </div>
+            <div class="flex flex-col gap-2 min-w-0">
+              <h3 class="text-xl leading-snug">
+                TEST2 Module 2: A child's point of view
+              </h3>
+              <a href="#" class="text-teal-700 font-medium hover:underline"
+                >Unlocked</a
+              >
+            </div>
+          </div>
+
+          <div class="flex flex-1 items-start justify-between gap-4">
+            <p class="text-slate-600 max-w-[780px]">
+              Voice is the beginning of point of view, but there’s a lot more to
+              it. This module looks at how point of view works – including how
+              to avoid…
+            </p>
+            <div class="flex items-center gap-7 shrink-0">
+              <div class="flex items-center gap-6 text-slate-600">
+                <span class="inline-flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M12 1.75a10.25 10.25 0 1 0 0 20.5 10.25 10.25 0 0 0 0-20.5Zm.75 5.5a.75.75 0 0 0-1.5 0v5.25c0 .2.08.39.22.53l3.25 3.25a.75.75 0 1 0 1.06-1.06l-3.03-3.03V7.25Z"
+                    />
+                  </svg>
+                  <span class="font-semibold text-slate-700">83 min</span>
+                </span>
+                <span class="inline-flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M4 6.75A1.75 1.75 0 0 1 5.75 5h12.5A1.75 1.75 0 0 1 20 6.75v10.5A1.75 1.75 0 0 1 18.25 19H5.75A1.75 1.75 0 0 1 4 17.25V6.75Zm2 .25v1.5h12V7H6Zm0 3v6.25h12V10H6Z"
+                    />
+                  </svg>
+                  <span class="font-semibold text-slate-700">9 Units</span>
+                </span>
+              </div>
+              <button class="text-slate-500 hover:text-slate-700">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-5 h-5 rotate-0"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M6 9.75 12 15l6-5.25" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- MODULE ITEM -->
+        <section class="flex gap-7 items-start py-6 border-b border-slate-200">
+          <div
+            class="flex items-start gap-3 min-w-[360px] md:flex-[0_0_460px] pl-4"
+          >
+            <div
+              class="flex items-center justify-center w-6 h-6 rounded-md border border-cyan-700 text-cyan-700 shrink-0 mt-1"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.8"
+                  d="M8 11V8a4 4 0 1 1 8 0m-9 3h10a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2z"
+                />
+              </svg>
+            </div>
+            <div class="flex flex-col gap-2 min-w-0">
+              <h3 class="text-xl leading-snug">
+                TEST2 Module 3: Write magnetic beginnings
+              </h3>
+              <a href="#" class="text-teal-700 font-medium hover:underline"
+                >Unlocked</a
+              >
+            </div>
+          </div>
+
+          <div class="flex flex-1 items-start justify-between gap-4">
+            <p class="text-slate-600 max-w-[780px]">
+              You need to grab the attention of young readers from the first
+              page so it’s vital that you write a compelling beginning. Young
+              readers aren’t…
+            </p>
+            <div class="flex items-center gap-7 shrink-0">
+              <div class="flex items-center gap-6 text-slate-600">
+                <span class="inline-flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M12 1.75a10.25 10.25 0 1 0 0 20.5 10.25 10.25 0 0 0 0-20.5Zm.75 5.5a.75.75 0 0 0-1.5 0v5.25c0 .2.08.39.22.53l3.25 3.25a.75.75 0 1 0 1.06-1.06l-3.03-3.03V7.25Z"
+                    />
+                  </svg>
+                  <span class="font-semibold text-slate-700">61 min</span>
+                </span>
+                <span class="inline-flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M4 6.75A1.75 1.75 0 0 1 5.75 5h12.5A1.75 1.75 0 0 1 20 6.75v10.5A1.75 1.75 0 0 1 18.25 19H5.75A1.75 1.75 0 0 1 4 17.25V6.75Zm2 .25v1.5h12V7H6Zm0 3v6.25h12V10H6Z"
+                    />
+                  </svg>
+                  <span class="font-semibold text-slate-700">7 Units</span>
+                </span>
+              </div>
+              <button class="text-slate-500 hover:text-slate-700">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-5 h-5 rotate-0"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M6 9.75 12 15l6-5.25" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- MODULE ITEM -->
+        <section class="flex gap-7 items-start py-6 border-b border-slate-200">
+          <div
+            class="flex items-start gap-3 min-w-[360px] md:flex-[0_0_460px] pl-4"
+          >
+            <div
+              class="flex items-center justify-center w-6 h-6 rounded-md border border-cyan-700 text-cyan-700 shrink-0 mt-1"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.8"
+                  d="M8 11V8a4 4 0 1 1 8 0m-9 3h10a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2z"
+                />
+              </svg>
+            </div>
+            <div class="flex flex-col gap-2 min-w-0">
+              <h3 class="text-xl leading-snug">
+                TEST2 Module 4: How to structure your story
+              </h3>
+              <a href="#" class="text-teal-700 font-medium hover:underline"
+                >Unlocked</a
+              >
+            </div>
+          </div>
+
+          <div class="flex flex-1 items-start justify-between gap-4">
+            <p class="text-slate-600 max-w-[780px]">
+              Once the story is up and running, it’s all about three things –
+              character, plot and pace. In this module, you’ll look at how to
+              manipulate each of…
+            </p>
+            <div class="flex items-center gap-7 shrink-0">
+              <div class="flex items-center gap-6 text-slate-600">
+                <span class="inline-flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M12 1.75a10.25 10.25 0 1 0 0 20.5 10.25 10.25 0 0 0 0-20.5Zm.75 5.5a.75.75 0 0 0-1.5 0v5.25c0 .2.08.39.22.53l3.25 3.25a.75.75 0 1 0 1.06-1.06l-3.03-3.03V7.25Z"
+                    />
+                  </svg>
+                  <span class="font-semibold text-slate-700">69 min</span>
+                </span>
+                <span class="inline-flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M4 6.75A1.75 1.75 0 0 1 5.75 5h12.5A1.75 1.75 0 0 1 20 6.75v10.5A1.75 1.75 0 0 1 18.25 19H5.75A1.75 1.75 0 0 1 4 17.25V6.75Zm2 .25v1.5h12V7H6Zm0 3v6.25h12V10H6Z"
+                    />
+                  </svg>
+                  <span class="font-semibold text-slate-700">7 Units</span>
+                </span>
+              </div>
+              <button class="text-slate-500 hover:text-slate-700">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-5 h-5 rotate-0"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M6 9.75 12 15l6-5.25" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div
+        id="allAnnouncementsContainer"
+        class="flex items-center gap-x-2 hidden"
+      >
+        <div
+          id="all-posts-tab"
+          class="text-button cursor-pointer m-2 px-3 py-2"
+        >
+          All Posts
+        </div>
+        <div id="my-posts-tab" class="text-button cursor-pointer px-3 py-2">
+          My Posts
+        </div>
+      </div>
+      <div id="chat-section" class="section max-w-6xl mx-auto px-6 py-8 hidden">
+        <div class="posts-input" id="create-post-section">
+          <div class="containerForToolbar">
+            <div
+              class="flex flex-wrap items-center gap-2 bg-white border border-gray-300 rounded p-2 shadow"
+            >
+              <button class="px-2 py-1 rounded hover:bg-gray-200" title="Bold">
+                𝐁
+              </button>
+              <button
+                class="px-2 py-1 rounded hover:bg-gray-200"
+                title="Italic"
+              >
+                𝐼
+              </button>
+              <button
+                class="px-2 py-1 rounded hover:bg-gray-200"
+                title="Underline"
+              >
+                U̲
+              </button>
+              <button
+                class="px-2 py-1 rounded hover:bg-gray-200"
+                title="Add Link"
+              >
+                🔗
+              </button>
+            </div>
+          </div>
+          <section class="createPost">
+            <div class="post-input">
+              <div
+                contenteditable="true"
+                rows="2"
+                id="post-data"
+                placeholder="Post your thoughts...Type @Name to mention people"
+              ></div>
+            </div>
+            <div class="commentFilePreviewContainer mt-2"></div>
+            <div class="create-post-buttons">
+              <input
+                id="postFile"
+                name="postFile"
+                type="file"
+                class="sr-only"
+              />
+              <label
+                for="postFile"
+                data-action="replace-button"
+                class="create-post-buttons attach-file inline-flex items-center gap-2 cursor-pointer border rounded px-3 py-2 !hidden"
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 12 12"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M3.91667 4.64897H1.41667C1.30616 4.64897 1.20018 4.60508 1.12204 4.52694C1.0439 4.4488 1 4.34281 1 4.23231V1.73231C0.999935 1.64985 1.02434 1.56923 1.07012 1.50065C1.1159 1.43207 1.18099 1.37861 1.25717 1.34705C1.33335 1.31549 1.41718 1.30723 1.49804 1.32334C1.57891 1.33944 1.65319 1.37918 1.71146 1.43752L2.66667 2.39377C3.58969 1.50296 4.8214 1.00356 6.10417 1.00002H6.13177C7.43806 0.996651 8.69309 1.50806 9.625 2.42345C9.70109 2.5013 9.7437 2.60583 9.7437 2.71469C9.74371 2.82354 9.70111 2.92808 9.62503 3.00593C9.54895 3.08378 9.44542 3.12877 9.33659 3.13126C9.22776 3.13376 9.12228 3.09357 9.04271 3.01929C8.26593 2.25683 7.22022 1.8308 6.13177 1.83335H6.10833C5.04593 1.83636 4.02534 2.24772 3.25781 2.98231L4.21146 3.93752C4.2698 3.99579 4.30953 4.07006 4.32564 4.15093C4.34174 4.2318 4.33349 4.31563 4.30193 4.3918C4.27036 4.46798 4.21691 4.53308 4.14833 4.57886C4.07974 4.62464 3.99912 4.64904 3.91667 4.64897ZM10.5833 7.14897H8.08333C8.00088 7.14891 7.92025 7.17331 7.85167 7.21909C7.78309 7.26487 7.72964 7.32997 7.69807 7.40615C7.66651 7.48232 7.65826 7.56615 7.67436 7.64702C7.69047 7.72789 7.7302 7.80216 7.78854 7.86043L8.74219 8.81564C7.97503 9.55067 6.95463 9.9626 5.89219 9.96616H5.86875C4.7803 9.96871 3.73459 9.54268 2.95781 8.78022C2.919 8.74052 2.87265 8.70897 2.82148 8.68744C2.77031 8.6659 2.71535 8.65481 2.65983 8.65481C2.60431 8.65481 2.54935 8.66591 2.49818 8.68746C2.44701 8.709 2.40066 8.74055 2.36185 8.78026C2.32305 8.81996 2.29257 8.86702 2.27221 8.91868C2.25185 8.97033 2.24202 9.02553 2.24329 9.08103C2.24457 9.13654 2.25692 9.19123 2.27963 9.24189C2.30233 9.29256 2.33494 9.33817 2.37552 9.37606C3.30743 10.2915 4.56246 10.8029 5.86875 10.7995H5.89583C7.1786 10.796 8.41031 10.2966 9.33333 9.40574L10.2896 10.362C10.348 10.4201 10.4223 10.4595 10.5032 10.4754C10.584 10.4912 10.6677 10.4828 10.7437 10.451C10.8198 10.4193 10.8847 10.3658 10.9303 10.2972C10.9759 10.2286 11.0002 10.148 11 10.0656V7.56564C11 7.45513 10.9561 7.34915 10.878 7.27101C10.7998 7.19287 10.6938 7.14897 10.5833 7.14897Z"
+                    fill="#007C8F"
+                  ></path>
+                </svg>
+                <span>Replace</span>
+              </label>
+              <button
+                data-action="delete-button"
+                class="create-post-buttons attach-file inline-flex items-center gap-2 cursor-pointer border rounded px-3 py-2 !hidden"
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 12 12"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M10.3462 2.53846H8.42308V2.15385C8.42308 1.84783 8.30151 1.55434 8.08512 1.33795C7.86874 1.12157 7.57525 1 7.26923 1H4.96154C4.65552 1 4.36203 1.12157 4.14565 1.33795C3.92926 1.55434 3.80769 1.84783 3.80769 2.15385V2.53846H1.88462C1.78261 2.53846 1.68478 2.57898 1.61265 2.65111C1.54052 2.72324 1.5 2.82107 1.5 2.92308C1.5 3.02508 1.54052 3.12291 1.61265 3.19504C1.68478 3.26717 1.78261 3.30769 1.88462 3.30769H2.26923V10.2308C2.26923 10.4348 2.35027 10.6304 2.49453 10.7747C2.63879 10.919 2.83445 11 3.03846 11H9.19231C9.39632 11 9.59198 10.919 9.73624 10.7747C9.8805 10.6304 9.96154 10.4348 9.96154 10.2308V3.30769H10.3462C10.4482 3.30769 10.546 3.26717 10.6181 3.19504C10.6902 3.12291 10.7308 3.02508 10.7308 2.92308C10.7308 2.82107 10.6902 2.72324 10.6181 2.65111C10.546 2.57898 10.4482 2.53846 10.3462 2.53846ZM4.57692 2.15385C4.57692 2.05184 4.61744 1.95401 4.68957 1.88188C4.7617 1.80975 4.85953 1.76923 4.96154 1.76923H7.26923C7.37124 1.76923 7.46907 1.80975 7.5412 1.88188C7.61332 1.95401 7.65385 2.05184 7.65385 2.15385V2.53846H4.57692V2.15385ZM9.19231 10.2308H3.03846V3.30769H9.19231V10.2308ZM5.34615 5.23077V8.30769C5.34615 8.4097 5.30563 8.50753 5.2335 8.57966C5.16137 8.65179 5.06354 8.69231 4.96154 8.69231C4.85953 8.69231 4.7617 8.65179 4.68957 8.57966C4.61744 8.50753 4.57692 8.4097 4.57692 8.30769V5.23077C4.57692 5.12876 4.61744 5.03093 4.68957 4.95881C4.7617 4.88668 4.85953 4.84615 4.96154 4.84615C5.06354 4.84615 5.16137 4.88668 5.2335 4.95881C5.30563 5.03093 5.34615 5.12876 5.34615 5.23077ZM7.65385 5.23077V8.30769C7.65385 8.4097 7.61332 8.50753 7.5412 8.57966C7.46907 8.65179 7.37124 8.69231 7.26923 8.69231C7.16722 8.69231 7.0694 8.65179 6.99727 8.57966C6.92514 8.50753 6.88462 8.4097 6.88462 8.30769V5.23077C6.88462 5.12876 6.92514 5.03093 6.99727 4.95881C7.0694 4.88668 7.16722 4.84615 7.26923 4.84615C7.37124 4.84615 7.46907 4.88668 7.5412 4.95881C7.61332 5.03093 7.65385 5.12876 7.65385 5.23077Z"
+                    fill="#007C8F"
+                  ></path>
+                </svg>
+                <span>Delete</span>
+              </button>
+
+              <input
+                id="postFile"
+                name="postFile"
+                type="file"
+                class="sr-only"
+              />
+              <label
+                data-action="attach-file"
+                for="postFile"
+                class="create-post-buttons attach-file inline-flex items-center gap-2 cursor-pointer border rounded px-3 py-2"
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 12 12"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M10.0385 5.72657C10.0743 5.76228 10.1026 5.80468 10.122 5.85136C10.1413 5.89804 10.1513 5.94807 10.1513 5.9986C10.1513 6.04913 10.1413 6.09916 10.122 6.14584C10.1026 6.19252 10.0743 6.23492 10.0385 6.27063L6.09504 10.2117C5.5902 10.7165 4.90551 11 4.19161 11C3.47771 11 2.79306 10.7163 2.28828 10.2115C1.78351 9.70664 1.49995 9.02195 1.5 8.30805C1.50005 7.59415 1.78369 6.9095 2.28852 6.40472L7.05916 1.56392C7.41958 1.20312 7.90856 1.00027 8.41854 1C8.92851 0.99973 9.41771 1.20206 9.77851 1.56247C10.1393 1.92289 10.3422 2.41187 10.3424 2.92185C10.3427 3.43183 10.1404 3.92102 9.77995 4.28182L5.00835 9.12263C4.79166 9.33933 4.49775 9.46107 4.1913 9.46107C3.88484 9.46107 3.59094 9.33933 3.37425 9.12263C3.15755 8.90593 3.03581 8.61203 3.03581 8.30558C3.03581 7.99912 3.15755 7.70522 3.37425 7.48852L7.37781 3.42151C7.41288 3.3841 7.45508 3.35408 7.50193 3.33322C7.54878 3.31236 7.59932 3.30109 7.65059 3.30005C7.70186 3.29902 7.75282 3.30826 7.80047 3.32721C7.84811 3.34617 7.89149 3.37447 7.92804 3.41044C7.96458 3.44641 7.99357 3.48933 8.01328 3.53667C8.03299 3.58401 8.04304 3.63481 8.04282 3.68609C8.04261 3.73737 8.03213 3.78809 8.01202 3.83526C7.99191 3.88243 7.96257 3.92511 7.92572 3.96077L3.92167 8.0321C3.88582 8.06767 3.85733 8.10995 3.83782 8.15653C3.81831 8.2031 3.80816 8.25307 3.80796 8.30357C3.80776 8.35406 3.81751 8.40411 3.83665 8.45084C3.85579 8.49757 3.88394 8.54008 3.91951 8.57593C3.95507 8.61178 3.99735 8.64027 4.04393 8.65978C4.09051 8.67929 4.14047 8.68944 4.19097 8.68964C4.24147 8.68984 4.29151 8.68009 4.33825 8.66095C4.38498 8.64181 4.42748 8.61365 4.46333 8.57809L9.23445 3.73968C9.45114 3.52343 9.57306 3.22996 9.57338 2.92382C9.57369 2.61768 9.45238 2.32395 9.23613 2.10726C9.01988 1.89056 8.7264 1.76865 8.42026 1.76833C8.11413 1.76801 7.8204 1.88933 7.6037 2.10558L2.83403 6.94446C2.65535 7.12286 2.51355 7.3347 2.41674 7.5679C2.31993 7.80109 2.27 8.05107 2.2698 8.30357C2.2696 8.55606 2.31913 8.80612 2.41557 9.03947C2.51201 9.27282 2.65347 9.48489 2.83187 9.66357C3.01026 9.84225 3.22211 9.98404 3.4553 10.0809C3.6885 10.1777 3.93848 10.2276 4.19097 10.2278C4.44346 10.228 4.69352 10.1785 4.92687 10.082C5.16022 9.98559 5.37229 9.84413 5.55097 9.66573L9.49494 5.72465C9.5673 5.65285 9.6652 5.61272 9.76713 5.61308C9.86906 5.61344 9.96668 5.65426 10.0385 5.72657Z"
+                    fill="#007C8F"
+                  ></path>
+                </svg>
+                <span>Attach a File</span>
+              </label>
+
+              <button class="post" id="post-button">
+                <span>Post</span>
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 12 12"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M10.4282 5.99409C10.4285 6.12138 10.3948 6.24645 10.3306 6.35635C10.2664 6.46625 10.174 6.55701 10.0629 6.61922L2.56502 10.9062C2.45742 10.9672 2.33595 10.9995 2.21227 11C2.09832 10.9994 1.98616 10.9715 1.88517 10.9187C1.78417 10.8659 1.69727 10.7898 1.63172 10.6965C1.56617 10.6033 1.52386 10.4958 1.50834 10.3829C1.49282 10.27 1.50453 10.155 1.54249 10.0476L2.74809 6.47767C2.75987 6.44277 2.78216 6.41236 2.8119 6.39062C2.84163 6.36888 2.87736 6.35686 2.9142 6.35622H6.14162C6.19059 6.35633 6.23906 6.34636 6.28402 6.32695C6.32898 6.30754 6.36946 6.27909 6.40296 6.24337C6.43646 6.20765 6.46226 6.16543 6.47875 6.11932C6.49525 6.07321 6.50208 6.0242 6.49884 5.97534C6.49074 5.88348 6.44824 5.79808 6.37985 5.73623C6.31145 5.67438 6.22222 5.64065 6.13002 5.64179H2.91509C2.87772 5.64179 2.84129 5.63008 2.81094 5.60829C2.78058 5.5865 2.75782 5.55574 2.74586 5.52034L1.54026 1.95088C1.49228 1.81406 1.48705 1.66588 1.52529 1.52603C1.56352 1.38617 1.6434 1.26126 1.75432 1.16789C1.86524 1.07451 2.00194 1.01709 2.14626 1.00326C2.29059 0.989426 2.43571 1.01983 2.56234 1.09044L10.0638 5.37209C10.1743 5.43416 10.2662 5.52447 10.3302 5.63377C10.3942 5.74307 10.4281 5.86742 10.4282 5.99409Z"
+                    fill="white"
+                  ></path>
+                </svg>
+              </button>
+            </div>
+          </section>
+        </div>
+        <section id="renderForms"></section>
+      </div>
+    </div>
+  </body>
+</html>
