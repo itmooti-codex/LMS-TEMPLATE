@@ -2,6 +2,7 @@ import { forumMapper } from "../utils/helper.js";
 import { contactMapper } from "../utils/helper.js";
 import { hideLoader } from "../utils/helper.js";
 import { tributObj } from "../utils/helper.js";
+import { courseMapper } from "../utils/helper.js";
 
 export class AWCController {
   constructor(model, view) {
@@ -21,19 +22,28 @@ export class AWCController {
       );
       const links = Array.from(document.querySelectorAll("a[data-target]"));
       const nav = document.querySelector("nav");
-      const navLinks = Array.from(nav?.querySelectorAll("a[data-target]") || []);
+      const navLinks = Array.from(
+        nav?.querySelectorAll("a[data-target]") || []
+      );
 
       const sectionsById = new Map(sections.map((s) => [s.id, s]));
       const linkById = new Map(links.map((l) => [l.dataset.target, l]));
       const navLinkById = new Map(navLinks.map((l) => [l.dataset.target, l]));
       const routeById = new Map(
-        Array.from(sectionsById.keys()).map((id) => [id, id.replace(/-section$/i, "")])
+        Array.from(sectionsById.keys()).map((id) => [
+          id,
+          id.replace(/-section$/i, ""),
+        ])
       );
       const idByRoute = new Map(
-        Array.from(routeById.entries()).map(([id, route]) => [route.toLowerCase(), id])
+        Array.from(routeById.entries()).map(([id, route]) => [
+          route.toLowerCase(),
+          id,
+        ])
       );
 
-      let currentId = sections.find((sec) => !sec.classList.contains("hidden"))?.id || null;
+      let currentId =
+        sections.find((sec) => !sec.classList.contains("hidden"))?.id || null;
 
       const setActiveSection = (targetId) => {
         if (!targetId || currentId === targetId) return;
@@ -46,13 +56,15 @@ export class AWCController {
         if (nextSection) nextSection.classList.remove("hidden");
 
         const prevLink = prevId ? navLinkById.get(prevId) : null;
-        if (prevLink) prevLink.classList.remove("text-sky-600", "font-semibold");
+        if (prevLink)
+          prevLink.classList.remove("text-sky-600", "font-semibold");
         const nextLink = navLinkById.get(targetId);
         if (nextLink) nextLink.classList.add("text-sky-600", "font-semibold");
       };
 
       const idToRoute = (id) => routeById.get(id) || "";
-      const routeToId = (route) => idByRoute.get((route || "").toLowerCase()) || null;
+      const routeToId = (route) =>
+        idByRoute.get((route || "").toLowerCase()) || null;
 
       const updateUrlParam = (route, replace = false) => {
         const url = new URL(window.location.href);
@@ -63,7 +75,10 @@ export class AWCController {
         else history.pushState({}, "", newUrl);
       };
 
-      const navigateTo = (targetId, { update = true, replace = false } = {}) => {
+      const navigateTo = (
+        targetId,
+        { update = true, replace = false } = {}
+      ) => {
         if (!targetId || currentId === targetId) return;
         setActiveSection(targetId);
         if (update) {
@@ -122,7 +137,7 @@ export class AWCController {
 
   async init() {
     try {
-      this.model.onData((records) => {
+      this.model.onPostData((records) => {
         try {
           this.allForumPosts = forumMapper(records);
           this.myForumPosts = this.allForumPosts?.filter(
@@ -137,10 +152,13 @@ export class AWCController {
           this.view.disableHTML(element, "enable");
         }
       });
+
+      this.model.onCourseData((records) => {
+        const modules = courseMapper(records);
+        this.view.renderCourseContent(modules);
+      });
+
       await this.model.init();
-      // Render course content via template (static data for now)
-      const modules = this.buildSampleModules();
-      this.view.renderCourseContent(modules);
       this.wireEvents();
       await this.tributeHandler();
       this.postsHandler();
@@ -150,56 +168,6 @@ export class AWCController {
       hideLoader();
     }
   }
-
-  buildSampleModules() {
-    return [
-      {
-        title: "TEST2 Start here",
-        description: "",
-        time: "3 min",
-        units: 2,
-        lessons: [
-          { title: "Welcome to your course", time: "3 min" },
-          { title: "MUST WATCH: How to navigate your online classroom" },
-        ],
-      },
-      {
-        title: "TEST2 Module 1: Key elements and characters",
-        description:
-          "In this module, you’ll discover more about the children’s novel and how it fits into publishing for children. We’ll look at what makes writing for this…",
-        time: "79 min",
-        units: 7,
-        lessons: [
-          { title: "Creating core characters" },
-          { title: "World-building basics" },
-        ],
-      },
-      {
-        title: "TEST2 Module 2: A child's point of view",
-        description:
-          "Voice is the beginning of point of view, but there’s a lot more to it. This module looks at how point of view works – including how to avoid…",
-        time: "83 min",
-        units: 9,
-        lessons: [
-          { title: "Opening hooks that shine" },
-          { title: "Pacing your first chapter" },
-        ],
-      },
-      {
-        title: "TEST2 Module 3: Write magnetic beginnings",
-        description:
-          "You need to grab the attention of young readers from the first page so it’s vital that you write a compelling beginning. Young readers aren’t…",
-        time: "61 min",
-        units: 7,
-        lessons: [
-          { title: "Three-act structure walkthrough" },
-          { title: "Balancing plot and character" },
-        ],
-      },
-    ];
-  }
-
-  
 
   async tributeHandler() {
     try {

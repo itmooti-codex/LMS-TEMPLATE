@@ -31,7 +31,7 @@ export class AWCView {
 
   // Content section template (full section: header + modules + lessons)
   registerContentTemplate() {
-    const template =  `<div>
+    const template = `<div>
         <p class="text-xs uppercase tracking-wider text-slate-500">Modules &amp; Lessons</p>
         <div class="mt-2 mb-6 flex items-end justify-between">
           <h1 class="text-2xl font-semibold tracking-tight text-slate-800">Course Content</h1>
@@ -40,7 +40,7 @@ export class AWCView {
         {{for modules}}
         <section class="flex flex-col gap-7 items-start py-6 border border-slate-200 rounded-xl px-4 my-4 bg-white card-hover">
           <div class="flex items-start gap-7 w-full flex-wrap md:flex-nowrap">
-            <div class="flex items-start gap-3 min-w-[360px] md:flex-[0_0_460px] pl-4">
+            <div class="flex items-start gap-3 w-full max-w-[460px] pl-4 sm:min-w-[280px]">
               <div class="flex items-center justify-center w-6 h-6 rounded-md border border-cyan-700 text-cyan-700 shrink-0 mt-1">
                <svg width="16" height="24" class="max-[800px]:!size-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path fill-rule="evenodd" clip-rule="evenodd" d="M8.44444 9.27295H9.92593V9.87858H20.2963C20.6892 9.87858 21.066 10.0205 21.3439 10.2731C21.6217 10.5256 21.7778 10.8682 21.7778 11.2254V20.6533C21.7778 21.0105 21.6217 21.353 21.3439 21.6056C21.066 21.8582 20.6892 22.0001 20.2963 22.0001H5.48148C5.08857 22.0001 4.71175 21.8582 4.43392 21.6056C4.15608 21.353 4 21.0105 4 20.6533V11.2254C4 10.8682 4.15608 10.5256 4.43392 10.2731C4.71175 10.0205 5.08857 9.87858 5.48148 9.87858H8.44444V9.27295ZM13.6296 18.633V16.4974C14.1239 16.3386 14.5404 16.026 14.8057 15.6149C15.0709 15.2039 15.1678 14.7208 15.0791 14.2511C14.9905 13.7814 14.722 13.3553 14.3212 13.0481C13.9204 12.7409 13.4131 12.5725 12.8889 12.5725C12.3647 12.5725 11.8573 12.7409 11.4565 13.0481C11.0558 13.3553 10.7873 13.7814 10.6987 14.2511C10.61 14.7208 10.7069 15.2039 10.9721 15.6149C11.2374 16.026 11.6539 16.3386 12.1481 16.4974V18.633C12.1481 18.8116 12.2262 18.9829 12.3651 19.1092C12.504 19.2355 12.6924 19.3064 12.8889 19.3064C13.0853 19.3064 13.2738 19.2355 13.4127 19.1092C13.5516 18.9829 13.6296 18.8116 13.6296 18.633Z" fill="#007C8F"></path> <path d="M9 10.182V6.54787C9.002 4.21375 7.4308 2.25781 5.3656 2.02326C3.3004 1.78871 1.4132 3.35191 1 5.63922" stroke="#007C8F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </svg>
               </div>
@@ -118,7 +118,7 @@ export class AWCView {
       const willShow = panel.classList.contains("hidden");
       panel.classList.toggle("hidden");
       // Expand/collapse the description to its needed height when toggling
-      const desc = section?.querySelector('[data-module-header] > p');
+      const desc = section?.querySelector("[data-module-header] > p");
       if (desc) {
         const clampClasses = [
           "h-4",
@@ -136,18 +136,22 @@ export class AWCView {
       if (icon) icon.classList.toggle("rotate-180", willShow);
       button.setAttribute("aria-expanded", String(willShow));
     };
-    scope.querySelectorAll('[data-module-toggle]').forEach((btn) => {
-      btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); togglePanel(btn); });
+    scope.querySelectorAll("[data-module-toggle]").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        togglePanel(btn);
+      });
     });
-    scope.querySelectorAll('[data-module-header]').forEach((header) => {
-      header.addEventListener('click', () => {
-        const btn = header.closest('section')?.querySelector('[data-module-toggle]');
+    scope.querySelectorAll("[data-module-header]").forEach((header) => {
+      header.addEventListener("click", () => {
+        const btn = header
+          .closest("section")
+          ?.querySelector("[data-module-toggle]");
         if (btn) togglePanel(btn);
       });
     });
   }
-
-  
 
   ensureTemplate() {
     const normType = (t) =>
@@ -226,7 +230,7 @@ export class AWCView {
       {{raw: ~audioPlayerHtml(fileLink, fileName, postId)}}
 
         {{else}}
-        <a href="{{:fileLink}}" target="_blank" rel="noopener" class="underline text-[#007C8F]">
+        <a href="{{:fileLink}}" target="_blank" rel="noopener" class="underline text-[#007C8F] mobile-ellipsis-link">
             {{:fileName}}
         </a>
         {{/if}}
@@ -328,7 +332,7 @@ export class AWCView {
            {{raw: ~audioPlayerHtml(fileLink, fileName, postId)}}
 
             {{else}}
-            <a href="{{:fileLink}}" target="_blank" rel="noopener" class="underline text-[#007C8F]">
+            <a href="{{:fileLink}}" target="_blank" rel="noopener" class="underline text-[#007C8F] mobile-ellipsis-link">
                 {{:fileName}}
             </a>
             {{/if}}
@@ -425,7 +429,7 @@ export class AWCView {
                     {{raw: ~audioPlayerHtml(fileLink, fileName, postId)}}
 
                     {{else}}
-                    <a href="{{:fileLink}}" target="_blank" rel="noopener" class="underline text-[#007C8F]">
+                    <a href="{{:fileLink}}" target="_blank" rel="noopener" class="underline text-[#007C8F] mobile-ellipsis-link">
                         {{:fileName}}
                     </a>
                     {{/if}}

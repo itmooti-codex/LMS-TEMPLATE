@@ -2,36 +2,68 @@ export class AWCModel {
   constructor(plugin) {
     window.plugin = plugin;
     window.eduflowproForumPostmodel = plugin.switchTo("EduflowproForumPost");
+    window.eduflowproCourseModel = plugin.switchTo("EduflowproCourse");
     window.forumReactorReactedToForumModal = plugin.switchTo(
       "EduflowproOForumReactorReactedtoForum"
     );
     window.contactModal = plugin.switchTo("EduflowproContact");
     this.limit = 500;
     this.offset = 0;
-    this.query = null;
+    this.PostQuery = null;
+    this.courseQuery = null;
     this.subscriptions = new Set();
-    this.dataCallback = null;
+    this.forumDataCallback = null;
+    this.courseDataCallback = null;
   }
 
-  onData(cb) {
-    this.dataCallback = cb;
+  onPostData(cb) {
+    this.forumDataCallback = cb;
+  }
+
+  onCourseData(cb) {
+    this.courseDataCallback = cb;
   }
 
   async init() {
     this.buildFetchPostQuery();
     await this.fetchPosts();
+    this.buildFetchCourseContentQuery();
+    await this.fetchCourseContent();
     this.subscribeToPosts();
     this.setupModelSubscription();
   }
 
   destroy() {
     this.unsubscribeAll();
-    if (this.query?.destroy) this.query.destroy();
-    this.query = null;
+    if (this.PostQuery?.destroy) this.PostQuery.destroy();
+    this.PostQuery = null;
+  }
+
+  buildFetchCourseContentQuery() {
+    this.courseQuery = eduflowproCourseModel
+      .query()
+      .deSelectAll()
+      .select(["id", "course_name", "description"])
+      .whereNotNull("course_name")
+      .noDestroy();
+
+    return this.courseQuery;
+  }
+
+  async fetchCourseContent() {
+    try {
+      await this.courseQuery
+        .fetch()
+        .pipe(window.toMainInstance?.(true) ?? ((x) => x))
+        .toPromise();
+      this.renderFromCourseContentState();
+    } catch (e) {
+      console.log("Error", e.error);
+    }
   }
 
   buildFetchPostQuery() {
-    this.query = eduflowproForumPostmodel
+    this.PostQuery = eduflowproForumPostmodel
       .query()
       .deSelectAll()
       .select(["id"])
@@ -60,32 +92,38 @@ export class AWCModel {
           });
       })
       .noDestroy();
-    return this.query;
+    return this.PostQuery;
   }
 
   async fetchPosts() {
     try {
-      await this.query
-        .fetch()
+      await this.PostQuery.fetch()
         .pipe(window.toMainInstance?.(true) ?? ((x) => x))
         .toPromise();
       this.renderFromState();
-    } catch {}
+    } catch (e) {
+      console.log("Error fetching posts", e.error);
+    }
   }
 
   renderFromState() {
-    const recs = this.query.getAllRecordsArray();
-    if (this.dataCallback) this.dataCallback(recs);
+    const postRecs = this.PostQuery.getAllRecordsArray();
+    if (this.forumDataCallback) this.forumDataCallback(postRecs);
+  }
+
+  renderFromCourseContentState() {
+    const courseRecs = this.courseQuery.getAllRecordsArray();
+    if (this.courseDataCallback) this.courseDataCallback(courseRecs);
   }
 
   subscribeToPosts() {
     this.unsubscribeAll();
     try {
       let liveObs;
-      if (this.query.subscribe) {
-        liveObs = this.query.subscribe();
+      if (this.PostQuery.subscribe) {
+        liveObs = this.PostQuery.subscribe();
       } else {
-        liveObs = this.query.localSubscribe();
+        liveObs = this.PostQuery.localSubscribe();
       }
       const liveSub = liveObs
         .pipe(window.toMainInstance?.(true) ?? ((x) => x))
@@ -96,8 +134,8 @@ export class AWCModel {
               : Array.isArray(payload)
               ? payload
               : [];
-            if (this.dataCallback)
-              requestAnimationFrame(() => this.dataCallback(data));
+            if (this.forumDataCallback)
+              requestAnimationFrame(() => this.forumDataCallback(data));
           },
           error: () => {},
         });

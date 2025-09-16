@@ -156,3 +156,22 @@ export function showLoader() {
 export function hideLoader() {
   document.getElementById("loaderModal").style.display = "none";
 }
+
+//-------------------------------------------------------------------------Course ---------------------------------------------//
+
+export function courseMapper(data) {
+  const courses = Object.values(data).map((item) => {
+    return {
+      title: item.course_name,
+      description: item.description,
+      time: "79 min",
+      units: 7,
+      lessons: [
+        { title: "Creating core characters" },
+        { title: "World-building basics" },
+      ],
+    };
+  });
+
+  return courses;
+}

@@ -1,7 +1,13 @@
 body {
-  margin: 0 auto;
-  height: 100vh;
-  overflow-y: unset;
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
 }
 
 /* Hide scrollbars for decorative scrollers */
@@ -192,6 +198,20 @@ textarea::placeholder {
 /* .hidden {
     display: none !important;
 } */
+
+.mobile-ellipsis-link {
+  display: inline;
+}
+
+@media (max-width: 600px) {
+  .mobile-ellipsis-link {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
 
 textarea:focus-visible {
   outline: none;
@@ -427,26 +447,20 @@ textarea:focus-visible {
 
 /* Base = mobile styles (0–480px) go here */
 
-/* Tablet */
-@media (min-width: 481px) and (max-width: 768px) {
-  body {
-    width: 100vw;
-    min-width: fit-content;
+@media (max-width: 640px) {
+  .create-post-buttons {
+    justify-content: center;
   }
-}
 
-/* Laptop */
-@media (min-width: 769px) and (max-width: 1280px) {
-  /* laptop-specific styles */
-}
+  .create-post-buttons .post {
+    width: 100%;
+    justify-content: center;
+  }
 
-/* Desktop / PC */
-@media (min-width: 1281px) {
-  /* body {
-        width: 100vw;
-        max-width: 50%;
-        
-    } */
+  .create-post-buttons .attach-file {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 .activeTab,
