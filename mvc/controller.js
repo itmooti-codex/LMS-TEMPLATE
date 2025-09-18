@@ -3,12 +3,13 @@ import { contactMapper } from "../utils/helper.js";
 import { hideLoader } from "../utils/helper.js";
 import { tributObj } from "../utils/helper.js";
 import { courseMapper } from "../utils/helper.js";
+import { announcementMapper } from "../utils/helper.js";
 
 export class AWCController {
   constructor(model, view) {
     this.model = model;
     this.view = view;
-    this.currentAuthorId = "92";
+    this.currentAuthorId = "62";
     this.myForumPosts = [];
     this.allForumPosts = [];
     this.initialListners();
@@ -153,13 +154,18 @@ export class AWCController {
         }
       });
 
+      this.model.onAnnouncementData((records) => {
+        let x = announcementMapper(records);
+        this.view.renderAnnouncement(x);
+      });
+
       this.model.onCourseData((records) => {
         const modules = courseMapper(records);
         this.view.renderCourseContent(modules);
       });
 
       await this.model.init();
-      this.wireEvents();
+      this.wirePostEvents();
       await this.tributeHandler();
       this.postsHandler();
     } catch (err) {
@@ -193,7 +199,7 @@ export class AWCController {
     }
   }
 
-  wireEvents() {
+  wirePostEvents() {
     this.view.onCreatePost(async ({ copy, fileMeta }, element) => {
       if (!copy) copy = "";
       try {
@@ -222,7 +228,7 @@ export class AWCController {
     });
 
     this.view.onUpvote(async (payload) => {
-      let { type, postId, commentId, element } = payload;
+      let { type, postId, commentId, element, section } = payload;
       try {
         this.view.disableHTML(element, "disable");
 
@@ -237,6 +243,7 @@ export class AWCController {
             let result = await this.model.createVote({
               Forum_Reactor_ID: this.currentAuthorId,
               Reacted_to_Forum_ID: postId,
+              section: section,
             });
             if (result?.isCancelling) {
               console.log("Error while voting the record");
@@ -245,7 +252,7 @@ export class AWCController {
             console.log("Post has been voted");
             this.view.applyUpvoteStyles(postId, voteId);
           } else {
-            let result = await this.model.deleteVote(voteId);
+            let result = await this.model.deleteVote(voteId, section);
             if (result.isCancelling) {
               console.log("Error while deleting the vote of the record");
               return;
@@ -262,7 +269,8 @@ export class AWCController {
           if (!voteId) {
             let result = await this.model.createCommentUpvote(
               commentId,
-              this.currentAuthorId
+              this.currentAuthorId,
+              section
             );
             if (result?.isCancelling) {
               console.log("Error while voting the record");
@@ -271,7 +279,10 @@ export class AWCController {
             console.log("Post has been voted");
             this.view.applyUpvoteStyles(postId, voteId);
           } else {
-            let result = await this.model.deleteCommentUpvote(Number(voteId));
+            let result = await this.model.deleteCommentUpvote(
+              Number(voteId),
+              section
+            );
             if (result?.isCancelling) {
               console.log("Error while voting the comment");
               return;
@@ -288,7 +299,8 @@ export class AWCController {
           if (!voteId) {
             let result = await this.model.createCommentUpvote(
               commentId,
-              this.currentAuthorId
+              this.currentAuthorId,
+              section
             );
             if (result?.isCancelling) {
               console.log("Error while voting the record");
@@ -297,7 +309,10 @@ export class AWCController {
             console.log("Post has been voted");
             this.view.applyUpvoteStyles(postId, voteId);
           } else {
-            let result = await this.model.deleteCommentUpvote(Number(voteId));
+            let result = await this.model.deleteCommentUpvote(
+              Number(voteId),
+              section
+            );
             if (result?.isCancelling) {
               console.log("Error while voting the reply");
               return;
@@ -373,21 +388,27 @@ export class AWCController {
       }
     });
 
-    this.view.getCommentValueObj(async (payload, fileMeta, element) => {
-      try {
-        payload.authorId = this.currentAuthorId;
-        let result = await this.model.createComment(payload, fileMeta);
-        if (!result.isCancelling) {
-          console.log("New comment has been created");
-        } else {
-          console.log("Comment creation failed");
+    this.view.getCommentValueObj(
+      async (payload, fileMeta, element, section) => {
+        try {
+          payload.authorId = this.currentAuthorId;
+          let result = await this.model.createComment(
+            payload,
+            fileMeta,
+            section
+          );
+          if (!result.isCancelling) {
+            console.log("New comment has been created");
+          } else {
+            console.log("Comment creation failed");
+          }
+        } catch (err) {
+          console.error("Error creating comment:", err);
+        } finally {
+          this.view.disableHTML(element, "enable");
         }
-      } catch (err) {
-        console.error("Error creating comment:", err);
-      } finally {
-        this.view.disableHTML(element, "enable");
       }
-    });
+    );
 
     this.view.getReplyValueObj(async (payload, metaData, element) => {
       try {
@@ -408,6 +429,8 @@ export class AWCController {
       }
     });
   }
+
+  wireAnnouncementEvents() {}
 
   postsHandler() {
     let myPostBtn = document.getElementById("my-posts-tab");

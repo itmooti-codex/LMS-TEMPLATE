@@ -1,25 +1,36 @@
+import { uploadAndGetFileLink } from "../utils/upload.js";
 export class AWCView {
   constructor({ mountId, modalRootId, postTextareaId, postButtonId, model }) {
-    this.mount = document.getElementById(mountId);
+    this.mount = [
+      document.getElementById(mountId),
+      document.getElementById("announcements-section"),
+    ];
+    this.forumtSectionMount = document.getElementById(mountId);
+    this.announcementMountSection = document.getElementById(
+      "announcements-section"
+    );
     this.modalRootId = modalRootId;
     this.postTextarea = document.getElementById(postTextareaId);
     this.postButton = document.getElementById(postButtonId);
     this.chatTemplateName = "PostTemplate";
     this.contentTemplateName = "ContentTemplate";
+    this.announceTemplateName = "AnnouncementTemplate";
     this.model = model;
     this.__activePreviewURLs = new WeakMap();
     this.init();
   }
 
   init() {
-    this.ensureTemplate();
-    // this.registerContentTemplate();
+    this.createForumTemplate();
+    // this.createContentTemplate();
     this.autoResizePostTextarea();
-    this.mount.addEventListener("click", (e) => {
-      const t = e.target.closest(".actionToggleButton");
-      if (!t) return;
-      const w = t.querySelector(".actionItemsWrapper");
-      if (w) w.classList.toggle("hidden");
+    this.mount.forEach((item) => {
+      item.addEventListener("click", (e) => {
+        const t = e.target.closest(".actionToggleButton");
+        if (!t) return;
+        const w = t.querySelector(".actionItemsWrapper");
+        if (w) w.classList.toggle("hidden");
+      });
     });
     this.getCommentValueObj();
     this.getReplyValueObj();
@@ -29,8 +40,7 @@ export class AWCView {
     this.implementToolbarEffect();
   }
 
-  // Content section template (full section: header + modules + lessons)
-  registerContentTemplate() {
+  createContentTemplate() {
     const template = `<div>
         <p class="text-xs uppercase tracking-wider text-slate-500">Modules &amp; Lessons</p>
         <div class="mt-2 mb-6 flex items-end justify-between">
@@ -100,7 +110,7 @@ export class AWCView {
   }
 
   renderCourseContent(modules) {
-    this.registerContentTemplate();
+    this.createContentTemplate();
     if (!modules || modules.length === 0) return;
     const html = $.render[this.contentTemplateName]({ modules });
     const mount = document.getElementById("content-section");
@@ -153,7 +163,7 @@ export class AWCView {
     });
   }
 
-  ensureTemplate() {
+  createForumTemplate() {
     const normType = (t) =>
       String(t || "")
         .toLowerCase()
@@ -592,8 +602,14 @@ export class AWCView {
   renderPosts(records) {
     if (!records || records.length == 0) return;
     const html = $.render[this.chatTemplateName](records);
-    let mount = document.getElementById("");
-    if (this.mount) this.mount.innerHTML = html;
+    if (this.forumtSectionMount) this.forumtSectionMount.innerHTML = html;
+  }
+
+  renderAnnouncement(records) {
+    if (!records || records.length == 0) return;
+    const html = $.render[this.chatTemplateName](records);
+    if (this.announcementMountSection)
+      this.announcementMountSection.innerHTML = html;
   }
 
   onCreatePost(handler) {
@@ -642,137 +658,161 @@ export class AWCView {
   }
 
   onUpvote(handler) {
-    if (!this.mount) return;
-    this.mount.addEventListener("click", (e) => {
-      const t =
-        e.target && e.target.nodeType === Node.TEXT_NODE
-          ? e.target.parentElement
-          : e.target;
-      const postUpvoteBtn = t.closest("[data-action='upvote-post']");
-      const commentUpvoteBtn = t.closest("[data-action='upvote-comment']");
-      const replyUpvoteBtn = t.closest("[data-action='upvote-reply']");
+    if (!this.mount || this.mount.length === 0) return;
 
-      if (!postUpvoteBtn && !commentUpvoteBtn && !replyUpvoteBtn) {
-        return;
-      }
+    this.mount.forEach((mountEl) => {
+      mountEl.addEventListener("click", (e) => {
+        const t =
+          e.target && e.target.nodeType === Node.TEXT_NODE
+            ? e.target.parentElement
+            : e.target;
 
-      let payload;
-      if (postUpvoteBtn) {
-        const postId = postUpvoteBtn.dataset.postId;
-        payload = {
-          type: "post",
-          postId: postId,
-          element: postUpvoteBtn,
-        };
-      } else if (commentUpvoteBtn) {
-        const commentId = commentUpvoteBtn.dataset.commentId;
-        const postCard = commentUpvoteBtn.closest(".postCard");
-        payload = {
-          element: commentUpvoteBtn,
-          type: "comment",
-          commentId: commentId,
-          postId:
-            postCard?.getAttribute("current-post-id") ||
-            commentDeleteBtn.dataset.postId ||
-            null,
-        };
-      } else if (replyUpvoteBtn) {
-        const replyId = replyUpvoteBtn.dataset.replyId;
-        const postCard = replyUpvoteBtn.closest(".postCard");
-        payload = {
-          element: replyUpvoteBtn,
-          type: "reply",
-          commentId: replyId,
-          postId:
-            postCard?.getAttribute("current-post-id") ||
-            commentDeleteBtn.dataset.postId ||
-            null,
-        };
-      }
-      handler?.(payload);
+        const postUpvoteBtn = t.closest("[data-action='upvote-post']");
+        const commentUpvoteBtn = t.closest("[data-action='upvote-comment']");
+        const replyUpvoteBtn = t.closest("[data-action='upvote-reply']");
+
+        const announcementSection = t.closest("#announcements-section");
+        const chatSection = t.closest("#chat-section");
+
+        if (!postUpvoteBtn && !commentUpvoteBtn && !replyUpvoteBtn) return;
+
+        let payload;
+        if (postUpvoteBtn) {
+          payload = {
+            type: "post",
+            postId: postUpvoteBtn.dataset.postId,
+            element: postUpvoteBtn,
+          };
+        } else if (commentUpvoteBtn) {
+          const postCard = commentUpvoteBtn.closest(".postCard");
+          payload = {
+            type: "comment",
+            commentId: commentUpvoteBtn.dataset.commentId,
+            postId:
+              postCard?.getAttribute("current-post-id") ||
+              commentUpvoteBtn.dataset.postId ||
+              null,
+            element: commentUpvoteBtn,
+          };
+        } else if (replyUpvoteBtn) {
+          const postCard = replyUpvoteBtn.closest(".postCard");
+          payload = {
+            type: "reply",
+            commentId: replyUpvoteBtn.dataset.replyId,
+            postId:
+              postCard?.getAttribute("current-post-id") ||
+              replyUpvoteBtn.dataset.postId ||
+              null,
+            element: replyUpvoteBtn,
+          };
+        }
+        if (chatSection) {
+          payload.section = "chat";
+        } else if (announcementSection) {
+          payload.section = "announcement";
+        }
+        handler?.(payload);
+      });
     });
   }
 
   onCommentButtonClicked(handler) {
-    if (!this.mount) return;
-    this.mount.addEventListener("click", (e) => {
-      const el = e.target.closest("[data-action='toggle-comment']");
-      if (!el) return;
-      const postId = el.dataset.postId;
-      handler(postId);
+    if (!this.mount || this.mount.length === 0) return;
+    this.mount.forEach((mountEl) => {
+      mountEl.addEventListener("click", (e) => {
+        const el = e.target.closest("[data-action='toggle-comment']");
+        if (!el) return;
+        handler(el.dataset.postId);
+      });
     });
   }
 
   onReplyButtonClicked(handler) {
-    if (!this.mount) return;
-    this.mount.addEventListener("click", (e) => {
-      const el = e.target.closest("[data-action='toggle-reply']");
-      if (!el) return;
-      const commentId = el.dataset.commentId;
-      handler(commentId);
+    if (!this.mount || this.mount.length === 0) return;
+    this.mount.forEach((mountEl) => {
+      mountEl.addEventListener("click", (e) => {
+        const el = e.target.closest("[data-action='toggle-reply']");
+        if (!el) return;
+        handler(el.dataset.commentId);
+      });
     });
   }
 
   onDeleteRequest(handler) {
-    if (!this.mount) return;
-    this.mount.addEventListener("click", (e) => {
-      const t =
-        e.target && e.target.nodeType === Node.TEXT_NODE
-          ? e.target.parentElement
-          : e.target;
+    if (!this.mount || this.mount.length === 0) return;
+    this.mount.forEach((mountEl) => {
+      mountEl.addEventListener("click", (e) => {
+        const t =
+          e.target && e.target.nodeType === Node.TEXT_NODE
+            ? e.target.parentElement
+            : e.target;
 
-      const postDeleteBtn = t.closest("[data-action='delete-request']");
-      const commentDeleteBtn = t.closest(
-        "[data-action='delete-comment-request']"
-      );
-      if (!postDeleteBtn && !commentDeleteBtn) return;
-      let payload;
+        const postDeleteBtn = t.closest("[data-action='delete-request']");
+        const commentDeleteBtn = t.closest(
+          "[data-action='delete-comment-request']"
+        );
+        if (!postDeleteBtn && !commentDeleteBtn) return;
 
-      if (commentDeleteBtn) {
-        const commentId = commentDeleteBtn.dataset.commentId;
-        const postCard = commentDeleteBtn.closest(".postCard");
-        const postId =
-          postCard?.getAttribute("current-post-id") ||
-          commentDeleteBtn.dataset.postId ||
-          null;
-        payload = { type: "comment", postId, commentId };
-      } else {
-        const postId = postDeleteBtn.dataset.postId;
-        payload = { type: "post", postId };
-      }
-      this.openDeleteModal({
-        onConfirm: () => handler?.(payload),
+        let payload;
+        if (commentDeleteBtn) {
+          const postCard = commentDeleteBtn.closest(".postCard");
+          payload = {
+            type: "comment",
+            postId:
+              postCard?.getAttribute("current-post-id") ||
+              commentDeleteBtn.dataset.postId ||
+              null,
+            commentId: commentDeleteBtn.dataset.commentId,
+          };
+        } else {
+          payload = { type: "post", postId: postDeleteBtn.dataset.postId };
+        }
+
+        this.openDeleteModal({
+          onConfirm: () => handler?.(payload),
+        });
       });
     });
   }
 
   applyUpvoteStyles(postId, voteId) {
-    const el = this.mount?.querySelector(
-      `[data-action="upvote"][data-post-id="${postId}"]`
-    );
-    if (!el) return;
+    if (!this.mount || this.mount.length === 0) return;
 
-    const svgPath = el.querySelector("svg path");
-    const label = el.querySelector("p");
+    this.mount.forEach((mountEl) => {
+      const el = mountEl.querySelector(
+        `[data-action="upvote"][data-post-id="${postId}"]`
+      );
+      if (!el) return;
 
-    const isVoted = voteId != "";
+      const svgPath = el.querySelector("svg path");
+      const label = el.querySelector("p");
+      const isVoted = voteId !== "";
 
-    el.style.setProperty(
-      "background",
-      isVoted ? "#007c8f" : "transparent",
-      "important"
-    );
-    svgPath?.style.setProperty(
-      "fill",
-      isVoted ? "white" : "#007C8F",
-      "important"
-    );
-    label?.style.setProperty("color", isVoted ? "white" : "black", "important");
+      el.style.setProperty(
+        "background",
+        isVoted ? "#007c8f" : "transparent",
+        "important"
+      );
+      svgPath?.style.setProperty(
+        "fill",
+        isVoted ? "white" : "#007C8F",
+        "important"
+      );
+      label?.style.setProperty(
+        "color",
+        isVoted ? "white" : "black",
+        "important"
+      );
+    });
   }
 
   removePostNode(postId) {
-    const node = this.mount?.querySelector(`[current-post-id='${postId}']`);
-    node?.remove();
+    if (!this.mount || this.mount.length === 0) return;
+
+    this.mount.forEach((mountEl) => {
+      const node = mountEl.querySelector(`[current-post-id='${postId}']`);
+      node?.remove();
+    });
   }
 
   openDeleteModal({ onConfirm }) {
@@ -857,12 +897,14 @@ export class AWCView {
   }
 
   getCommentValueObj(handler) {
-    const container = document;
     document.addEventListener("submit", async (e) => {
       let form = e.target.closest(".commentForm");
       this.disableHTML(form, "disable");
       if (!form) return;
       e.preventDefault();
+
+      const announcementSection = e.target.closest("#announcements-section");
+      const chatSection = e.target.closest("#chat-section");
 
       // const scope = form.dataset.parentType === 'post' ? 'comment' : 'reply';
       const parentId = form.dataset.parentId || null;
@@ -893,7 +935,18 @@ export class AWCView {
         this.disableHTML(form, "enable");
         return;
       }
-      handler?.({ html: html, forumId: Number(parentId) }, fileMeta, form);
+      let section;
+      if (chatSection) {
+        section = "chat";
+      } else if (announcementSection) {
+        section = "announcement";
+      }
+      handler?.(
+        { html: html, forumId: Number(parentId) },
+        fileMeta,
+        form,
+        section
+      );
     });
   }
 

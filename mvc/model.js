@@ -1,19 +1,35 @@
+// Snapshot of the advanced AWCModel implementation prior to the reset.
+// This file consolidates the version that included announcement support,
+// guarded subscriptions, and section-aware voting/comment APIs.
+
 export class AWCModel {
   constructor(plugin) {
     window.plugin = plugin;
     window.eduflowproForumPostmodel = plugin.switchTo("EduflowproForumPost");
     window.eduflowproCourseModel = plugin.switchTo("EduflowproCourse");
+    window.eduflowproAnnouncementModel = plugin.switchTo(
+      "EduflowproAnnouncement"
+    );
     window.forumReactorReactedToForumModal = plugin.switchTo(
       "EduflowproOForumReactorReactedtoForum"
+    );
+    window.AnnouncementReactorReactedToAnnouncementModel = plugin.switchTo(
+      "EduflowproAnnouncementReactor"
     );
     window.contactModal = plugin.switchTo("EduflowproContact");
     this.limit = 500;
     this.offset = 0;
     this.PostQuery = null;
     this.courseQuery = null;
+    this.announcementQuery = null;
     this.subscriptions = new Set();
     this.forumDataCallback = null;
     this.courseDataCallback = null;
+    this.announcementCallback = null;
+    this.postSubscription = null;
+    this.announcementSubscription = null;
+    this._isFetchingPosts = false;
+    this._isFetchingAnnouncements = false;
   }
 
   onPostData(cb) {
@@ -24,13 +40,21 @@ export class AWCModel {
     this.courseDataCallback = cb;
   }
 
+  onAnnouncementData(cb) {
+    this.announcementCallback = cb;
+  }
+
   async init() {
     this.buildFetchPostQuery();
     await this.fetchPosts();
     this.buildFetchCourseContentQuery();
     await this.fetchCourseContent();
+    this.buildFetchAnnouncementQuery();
+    await this.fetchAnnouncement();
     this.subscribeToPosts();
-    this.setupModelSubscription();
+    this.subscribeToAnnouncement();
+    this.setupPostModelSubscription();
+    this.setupPostAnnouncementSubscription();
   }
 
   destroy() {
@@ -48,6 +72,71 @@ export class AWCModel {
       .noDestroy();
 
     return this.courseQuery;
+  }
+
+  buildFetchAnnouncementQuery() {
+    this.announcementQuery = eduflowproAnnouncementModel
+      .query()
+      .deSelectAll()
+      .select([
+        "id",
+        "status",
+        "content",
+        "attachement",
+        "created_at",
+        "disable_comments",
+        "profile_image",
+        "instructor_id",
+      ])
+      .where("id", "5276")
+      .include("Instructor", (q) => {
+        q.deSelectAll().select([
+          "display_name",
+          "first_name",
+          "last_name",
+          "profile_image",
+        ]);
+      })
+      .include("Announcement_Reactors_Data", (q) => {
+        q.deSelectAll().select([
+          "id",
+          "announcement_reactor_id",
+          "contact_announcement_reactor_id",
+        ]);
+      })
+      .include("ForumComments", (q) => {
+        q.deSelectAll()
+          .select(["id", "comment"])
+          .include("Member_Comment_Upvotes_Data", (child) =>
+            child.deSelectAll().select(["id"])
+          )
+          .include("ForumComments", (child) => {
+            child
+              .deSelectAll()
+              .select(["id", "comment"])
+              .include("Member_Comment_Upvotes_Data", (grand) =>
+                grand.deSelectAll().select(["id"])
+              );
+          });
+      })
+      .noDestroy();
+  }
+
+  async fetchAnnouncement() {
+    if (this._isFetchingAnnouncements) return;
+    this._isFetchingAnnouncements = true;
+    try {
+      await this.announcementQuery
+        .fetch()
+        .pipe(window.toMainInstance?.(true) ?? ((x) => x))
+        .toPromise();
+      this.renderAnnouncementState();
+    } catch (e) {
+      console.log("Error fetching announcements", e.error);
+      return [];
+    } finally {
+      this._isFetchingAnnouncements = false;
+    }
   }
 
   async fetchCourseContent() {
@@ -80,14 +169,15 @@ export class AWCModel {
       .include("ForumComments", (q) => {
         q.deSelectAll()
           .select(["id", "comment"])
-          .include("Member_Comment_Upvotes_Data", (q) =>
-            q.deSelectAll().select(["id"])
+          .include("Member_Comment_Upvotes_Data", (child) =>
+            child.deSelectAll().select(["id"])
           )
-          .include("ForumComments", (q) => {
-            q.deSelectAll()
+          .include("ForumComments", (child) => {
+            child
+              .deSelectAll()
               .select(["id", "comment"])
-              .include("Member_Comment_Upvotes_Data", (q) =>
-                q.deSelectAll().select(["id"])
+              .include("Member_Comment_Upvotes_Data", (grand) =>
+                grand.deSelectAll().select(["id"])
               );
           });
       })
@@ -96,17 +186,21 @@ export class AWCModel {
   }
 
   async fetchPosts() {
+    if (this._isFetchingPosts) return;
+    this._isFetchingPosts = true;
     try {
       await this.PostQuery.fetch()
         .pipe(window.toMainInstance?.(true) ?? ((x) => x))
         .toPromise();
-      this.renderFromState();
+      this.renderForumPostState();
     } catch (e) {
       console.log("Error fetching posts", e.error);
+    } finally {
+      this._isFetchingPosts = false;
     }
   }
 
-  renderFromState() {
+  renderForumPostState() {
     const postRecs = this.PostQuery.getAllRecordsArray();
     if (this.forumDataCallback) this.forumDataCallback(postRecs);
   }
@@ -116,8 +210,18 @@ export class AWCModel {
     if (this.courseDataCallback) this.courseDataCallback(courseRecs);
   }
 
+  renderAnnouncementState() {
+    const announcementRecs =
+      typeof this.announcementQuery?.getAllRecordsArray === "function"
+        ? this.announcementQuery.getAllRecordsArray()
+        : [];
+    if (this.announcementCallback)
+      this.announcementCallback(announcementRecs ?? []);
+  }
+
   subscribeToPosts() {
-    this.unsubscribeAll();
+    this.teardownSubscription(this.postSubscription);
+    this.postSubscription = null;
     try {
       let liveObs;
       if (this.PostQuery.subscribe) {
@@ -128,28 +232,47 @@ export class AWCModel {
       const liveSub = liveObs
         .pipe(window.toMainInstance?.(true) ?? ((x) => x))
         .subscribe({
-          next: (payload) => {
-            const data = Array.isArray(payload?.records)
-              ? payload.records
-              : Array.isArray(payload)
-              ? payload
-              : [];
+          next: () => {
             if (this.forumDataCallback)
-              requestAnimationFrame(() => this.forumDataCallback(data));
+              requestAnimationFrame(() => this.renderForumPostState());
+            this.fetchPosts().catch(() => {});
           },
           error: () => {},
         });
-      this.subscriptions.add(liveSub);
+      this.postSubscription = liveSub;
+    } catch {}
+  }
+
+  subscribeToAnnouncement() {
+    this.teardownSubscription(this.announcementSubscription);
+    this.announcementSubscription = null;
+    try {
+      let liveObs;
+      if (this.announcementQuery.subscribe) {
+        liveObs = this.announcementQuery.subscribe();
+      } else {
+        liveObs = this.announcementQuery.localSubscribe();
+      }
+      const liveSub = liveObs
+        .pipe(window.toMainInstance?.(true) ?? ((x) => x))
+        .subscribe({
+          next: () => {
+            if (this.announcementCallback)
+              requestAnimationFrame(() => this.renderAnnouncementState());
+            this.fetchAnnouncement().catch(() => {});
+          },
+          error: () => {},
+        });
+      this.announcementSubscription = liveSub;
     } catch {}
   }
 
   async createPost({ authorId, copy, fileMeta }) {
-    let postquery = eduflowproForumPostmodel.mutation();
+    const postquery = eduflowproForumPostmodel.mutation();
     const payload = {
       published_date: Math.floor(Date.now() / 1000).toString(),
       author_id: authorId,
-      copy: copy,
-      // Ensure the optimistic record matches the live query filter
+      copy,
       forum_status: "Published - Not flagged",
     };
     if (fileMeta && fileMeta.file_link) {
@@ -176,10 +299,20 @@ export class AWCModel {
     }
   }
 
-  setupModelSubscription() {
+  setupPostModelSubscription() {
     const modelUnsub = eduflowproForumPostmodel.subscribe?.({
-      next: (data) => {
-        // this.renderFromState()
+      next: () => {
+        // this.renderForumPostState();
+      },
+      error: () => {},
+    });
+    if (modelUnsub) this.subscriptions.add(modelUnsub);
+  }
+
+  setupPostAnnouncementSubscription() {
+    const modelUnsub = eduflowproAnnouncementModel.subscribe?.({
+      next: () => {
+        // this.renderAnnouncementState();
       },
       error: () => {},
     });
@@ -187,32 +320,55 @@ export class AWCModel {
   }
 
   unsubscribeAll() {
+    this.teardownSubscription(this.postSubscription);
+    this.teardownSubscription(this.announcementSubscription);
+    this.postSubscription = null;
+    this.announcementSubscription = null;
     this.subscriptions.forEach((sub) => {
-      if (typeof sub === "function") sub();
-      else sub?.unsubscribe?.();
+      this.teardownSubscription(sub);
     });
     this.subscriptions.clear();
   }
 
-  async createVote({ Forum_Reactor_ID, Reacted_to_Forum_ID }) {
-    let query = forumReactorReactedToForumModal.mutation();
-    query.createOne({
-      forum_reactor_id: Number(Forum_Reactor_ID),
-      reacted_to_forum_id: Number(Reacted_to_Forum_ID),
-    });
+  teardownSubscription(handle) {
+    if (!handle) return;
+    if (typeof handle === "function") handle();
+    else handle?.unsubscribe?.();
+  }
+
+  async createVote({ Forum_Reactor_ID, Reacted_to_Forum_ID, section }) {
+    let query = null;
+    if (section === "chat") {
+      query = forumReactorReactedToForumModal.mutation();
+      query.createOne({
+        forum_reactor_id: Number(Forum_Reactor_ID),
+        reacted_to_forum_id: Number(Reacted_to_Forum_ID),
+      });
+    } else if (section === "announcement") {
+      query = AnnouncementReactorReactedToAnnouncementModel.mutation();
+      query.createOne({
+        contact_announcement_reactor_id: Number(Reacted_to_Forum_ID),
+        announcement_reactor_id: Number(Forum_Reactor_ID),
+      });
+    }
     const result = await query.execute(true).toPromise();
     return result;
   }
 
-  async deleteVote(id) {
-    let query = forumReactorReactedToForumModal.mutation();
+  async deleteVote(id, section) {
+    let query;
+    if (section === "chat") {
+      query = forumReactorReactedToForumModal.mutation();
+    } else if (section === "announcement") {
+      query = AnnouncementReactorReactedToAnnouncementModel.mutation();
+    }
     query.delete((q) => q.where("id", id));
     const result = await query.execute(true).toPromise();
     return result;
   }
 
   async fetchContacts() {
-    let records = await contactModal
+    const records = await contactModal
       .query()
       .fetch()
       .pipe(window.toMainInstance?.(true) ?? ((x) => x))
@@ -221,32 +377,43 @@ export class AWCModel {
     return records;
   }
 
-  async createComment({ html, forumId, authorId }, fileMeta) {
-    let postquery = plugin.switchTo("EduflowproForumComment").mutation();
-    postquery.createOne({
-      comment: html,
-      forum_post_id: forumId,
-      authorId: authorId,
-      file_name: fileMeta?.file_name,
-      file_link: fileMeta?.file_link,
-      file_type: fileMeta?.file_type,
-      file_size: fileMeta?.file_size,
-    });
+  async createComment({ html, forumId, authorId }, fileMeta, section) {
+    const postquery = plugin.switchTo("EduflowproForumComment").mutation();
+    if (section === "announcement") {
+      postquery.createOne({
+        comment: html,
+        announcement_as_a_parent_id: forumId,
+        author_id: authorId,
+        file_name: fileMeta?.file_name,
+        file_link: fileMeta?.file_link,
+        file_type: fileMeta?.file_type,
+        file_size: fileMeta?.file_size,
+      });
+    } else if (section === "chat") {
+      postquery.createOne({
+        comment: html,
+        id: forumId,
+        author_id: authorId,
+        file_name: fileMeta?.file_name,
+        file_link: fileMeta?.file_link,
+        file_type: fileMeta?.file_type,
+        file_size: fileMeta?.file_size,
+      });
+    }
 
-    let result = await postquery.execute(true).toPromise();
+    const result = await postquery.execute(true).toPromise();
     return result;
   }
 
   async deleteComment(id) {
-    let query = plugin.switchTo("EduflowproForumComment").mutation();
+    const query = plugin.switchTo("EduflowproForumComment").mutation();
     query.delete((q) => q.where("id", id));
-
-    let result = await query.execute(true).toPromise();
+    const result = await query.execute(true).toPromise();
     return result;
   }
 
   async createCommentUpvote(commentId, authorId) {
-    let query = plugin
+    const query = plugin
       .switchTo("EduflowproMemberCommentUpvotesForumCommentUpvotes")
       .mutation();
     query.createOne({
@@ -254,22 +421,22 @@ export class AWCModel {
       member_comment_upvote_id: Number(authorId),
     });
 
-    let result = await query.execute(true).toPromise();
+    const result = await query.execute(true).toPromise();
     return result;
   }
 
   async deleteCommentUpvote(upvoteId) {
-    let query = plugin
+    const query = plugin
       .switchTo("EduflowproMemberCommentUpvotesForumCommentUpvotes")
       .mutation();
     query.delete((q) => q.where("id", upvoteId));
 
-    let result = await query.execute(true).toPromise();
+    const result = await query.execute(true).toPromise();
     return result;
   }
 
   async createReplyToComment({ commentId, content, authorId }, fileMeta) {
-    let postquery = plugin.switchTo("EduflowproForumComment").mutation();
+    const postquery = plugin.switchTo("EduflowproForumComment").mutation();
     postquery.createOne({
       reply_to_comment_id: commentId,
       comment: content,
@@ -280,7 +447,7 @@ export class AWCModel {
       file_size: fileMeta?.file_size,
     });
 
-    let result = await postquery.execute(true).toPromise();
+    const result = await postquery.execute(true).toPromise();
     return result;
   }
 }
