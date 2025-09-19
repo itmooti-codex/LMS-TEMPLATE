@@ -209,7 +209,7 @@ export class AWCView {
     <!-- POST HEADER -->
     <div class="flex items-center gap-4">
         <img class="w-6 h-6 rounded-full border border-[#d3d3d3]"
-            src="{{:avatar || 'https://i.ontraport.com/265848.fef288b2e2a570a362d1141a783309d8.JPEG'}}">
+            src="{{:authorImage || 'https://i.ontraport.com/265848.fef288b2e2a570a362d1141a783309d8.JPEG'}}">
         <div class="flex flex-wrap items-center gap-4">
             <div class="text-[#414042] button max-[600px]:tracking-[0.86px] line-clamp-1">{{:author}}</div>
             <div class="py-1.5 px-3 bg-[#c7e6e6] rounded-[36px] font-[400] text-[12px] text-[#414042] line-clamp-1">

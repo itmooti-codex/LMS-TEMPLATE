@@ -189,6 +189,7 @@ export function announcementMapper(records) {
     published_days_ago: item.created_at ? timeAgo(item.created_at) : null,
     author: item.Instructor?.display_name ?? "Anonymous",
     authorId: item?.Instructor?.id,
+    authorImage: item?.Instructor?.profile_image,
     canDelete: checkUserValidation(item.author_id),
     postId: item.id,
     designation: checkDesignation(item.Author?.is_instructor),
@@ -222,7 +223,8 @@ function getAllAnnouncementComments({ item, author, canDelete }) {
         fileLink: item.file_link ?? null,
         fileName: item.file_name ?? null,
         comment: item.comment,
-        author: author,
+        author: item?.Author?.display_name,
+        authorImage: item?.Author?.profile_image,
         id: item.id,
         canDelete: canDelete,
         voteCount: Array.isArray(item?.Member_Comment_Upvotes_Data)
@@ -237,7 +239,7 @@ function getAllAnnouncementComments({ item, author, canDelete }) {
           ? Object.values(item.ForumComments).map((item) => ({
               id: item.id,
               reply: item.comment,
-              author: author,
+              author: item?.Author?.display_name,
               voteCount: Array.isArray(item?.Member_Comment_Upvotes_Data)
                 ? item.Member_Comment_Upvotes_Data.length
                 : Object.values(item?.Member_Comment_Upvotes_Data ?? {}).length,

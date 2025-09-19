@@ -16,6 +16,9 @@ export class AWCModel {
     window.AnnouncementReactorReactedToAnnouncementModel = plugin.switchTo(
       "EduflowproAnnouncementReactor"
     );
+    window.MemberCommentUpvoteLinkModel = plugin.switchTo(
+      "EduflowproMemberCommentUpvotesForumCommentUpvotes"
+    );
     window.contactModal = plugin.switchTo("EduflowproContact");
     this.limit = 500;
     this.offset = 0;
@@ -88,7 +91,6 @@ export class AWCModel {
         "profile_image",
         "instructor_id",
       ])
-      .where("id", "5276")
       .include("Instructor", (q) => {
         q.deSelectAll().select([
           "display_name",
@@ -172,6 +174,9 @@ export class AWCModel {
           .include("Member_Comment_Upvotes_Data", (child) =>
             child.deSelectAll().select(["id"])
           )
+          .include("Author", (q) => {
+            q.select(["display_name"]);
+          })
           .include("ForumComments", (child) => {
             child
               .deSelectAll()
@@ -220,8 +225,7 @@ export class AWCModel {
   }
 
   subscribeToPosts() {
-    this.teardownSubscription(this.postSubscription);
-    this.postSubscription = null;
+    this.unsubscribeAll();
     try {
       let liveObs;
       if (this.PostQuery.subscribe) {
@@ -232,38 +236,52 @@ export class AWCModel {
       const liveSub = liveObs
         .pipe(window.toMainInstance?.(true) ?? ((x) => x))
         .subscribe({
-          next: () => {
+          next: (payload) => {
+            const data = Array.isArray(payload?.records)
+              ? payload.records
+              : Array.isArray(payload)
+              ? payload
+              : [];
             if (this.forumDataCallback)
-              requestAnimationFrame(() => this.renderForumPostState());
-            this.fetchPosts().catch(() => {});
+              requestAnimationFrame(() => this.forumDataCallback(data));
           },
           error: () => {},
         });
-      this.postSubscription = liveSub;
+      this.subscriptions.add(liveSub);
+      this.announcementSubscription = liveSub;
     } catch {}
   }
 
   subscribeToAnnouncement() {
-    this.teardownSubscription(this.announcementSubscription);
-    this.announcementSubscription = null;
+    this.unsubscribeAll(); // or a dedicated unsubscribe just for announcements
     try {
-      let liveObs;
-      if (this.announcementQuery.subscribe) {
-        liveObs = this.announcementQuery.subscribe();
-      } else {
-        liveObs = this.announcementQuery.localSubscribe();
-      }
+      if (!this.announcementQuery) return;
+
+      const liveObs = this.announcementQuery.subscribe
+        ? this.announcementQuery.subscribe()
+        : this.announcementQuery.localSubscribe();
+
       const liveSub = liveObs
         .pipe(window.toMainInstance?.(true) ?? ((x) => x))
         .subscribe({
-          next: () => {
-            if (this.announcementCallback)
-              requestAnimationFrame(() => this.renderAnnouncementState());
-            this.fetchAnnouncement().catch(() => {});
+          next: (payload) => {
+            const data = Array.isArray(payload?.records)
+              ? payload.records
+              : Array.isArray(payload)
+              ? payload
+              : payload?.record
+              ? [payload.record]
+              : [];
+
+            if (this.announcementCallback) {
+              requestAnimationFrame(() => this.announcementCallback(data));
+            }
           },
           error: () => {},
         });
-      this.announcementSubscription = liveSub;
+
+      this.subscriptions.add(liveSub);
+      this.announcementSubscription = liveSub; // keep a ref if needed
     } catch {}
   }
 
@@ -301,8 +319,13 @@ export class AWCModel {
 
   setupPostModelSubscription() {
     const modelUnsub = eduflowproForumPostmodel.subscribe?.({
-      next: () => {
-        // this.renderForumPostState();
+      next: ({ type }) => {
+        // Refetch on create/delete; incremental render is fine for simple updates.
+        if (type === "create" || type === "delete") {
+          this.fetchPosts().catch(() => {});
+        } else {
+          this.renderForumPostState();
+        }
       },
       error: () => {},
     });
@@ -311,8 +334,12 @@ export class AWCModel {
 
   setupPostAnnouncementSubscription() {
     const modelUnsub = eduflowproAnnouncementModel.subscribe?.({
-      next: () => {
-        // this.renderAnnouncementState();
+      next: ({ type }) => {
+        if (type === "create" || type === "delete") {
+          this.fetchAnnouncement().catch(() => {});
+        } else {
+          this.renderAnnouncementState();
+        }
       },
       error: () => {},
     });
@@ -320,20 +347,11 @@ export class AWCModel {
   }
 
   unsubscribeAll() {
-    this.teardownSubscription(this.postSubscription);
-    this.teardownSubscription(this.announcementSubscription);
-    this.postSubscription = null;
-    this.announcementSubscription = null;
     this.subscriptions.forEach((sub) => {
-      this.teardownSubscription(sub);
+      if (typeof sub === "function") sub();
+      else sub?.unsubscribe?.();
     });
     this.subscriptions.clear();
-  }
-
-  teardownSubscription(handle) {
-    if (!handle) return;
-    if (typeof handle === "function") handle();
-    else handle?.unsubscribe?.();
   }
 
   async createVote({ Forum_Reactor_ID, Reacted_to_Forum_ID, section }) {
@@ -392,7 +410,7 @@ export class AWCModel {
     } else if (section === "chat") {
       postquery.createOne({
         comment: html,
-        id: forumId,
+        forum_post_id: forumId,
         author_id: authorId,
         file_name: fileMeta?.file_name,
         file_link: fileMeta?.file_link,
@@ -413,9 +431,7 @@ export class AWCModel {
   }
 
   async createCommentUpvote(commentId, authorId) {
-    const query = plugin
-      .switchTo("EduflowproMemberCommentUpvotesForumCommentUpvotes")
-      .mutation();
+    const query = MemberCommentUpvoteLinkModel.mutation();
     query.createOne({
       forum_comment_upvote_id: Number(commentId),
       member_comment_upvote_id: Number(authorId),
@@ -426,9 +442,7 @@ export class AWCModel {
   }
 
   async deleteCommentUpvote(upvoteId) {
-    const query = plugin
-      .switchTo("EduflowproMemberCommentUpvotesForumCommentUpvotes")
-      .mutation();
+    const query = MemberCommentUpvoteLinkModel.mutation();
     query.delete((q) => q.where("id", upvoteId));
 
     const result = await query.execute(true).toPromise();
