@@ -1,9 +1,11 @@
 // SDK configuration. Fill in your actual slug and apiKey.
 export const config = {
-  slug: "eduflowpro",
-  apiKey: "uXVeRpnkFYHhT8SQK6JXo",
+  slug: slugFromOp,
+  apiKey: apiKeyFromOp,
 };
 
+export const parentClassId = parentClassIdFromOp;
+export const courseId = courseIdFromOp;
 export const API_KEY = "uXVeRpnkFYHhT8SQK6JXo"; // Eventmx GraphQL API Key
 export const ACCOUNT_NAME = "Eduflowpro";
 export const HTTP_ENDPOINT = "https://eduflowpro.vitalstats.app";

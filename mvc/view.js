@@ -55,7 +55,7 @@ export class AWCView {
                <svg width="16" height="24" class="max-[800px]:!size-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path fill-rule="evenodd" clip-rule="evenodd" d="M8.44444 9.27295H9.92593V9.87858H20.2963C20.6892 9.87858 21.066 10.0205 21.3439 10.2731C21.6217 10.5256 21.7778 10.8682 21.7778 11.2254V20.6533C21.7778 21.0105 21.6217 21.353 21.3439 21.6056C21.066 21.8582 20.6892 22.0001 20.2963 22.0001H5.48148C5.08857 22.0001 4.71175 21.8582 4.43392 21.6056C4.15608 21.353 4 21.0105 4 20.6533V11.2254C4 10.8682 4.15608 10.5256 4.43392 10.2731C4.71175 10.0205 5.08857 9.87858 5.48148 9.87858H8.44444V9.27295ZM13.6296 18.633V16.4974C14.1239 16.3386 14.5404 16.026 14.8057 15.6149C15.0709 15.2039 15.1678 14.7208 15.0791 14.2511C14.9905 13.7814 14.722 13.3553 14.3212 13.0481C13.9204 12.7409 13.4131 12.5725 12.8889 12.5725C12.3647 12.5725 11.8573 12.7409 11.4565 13.0481C11.0558 13.3553 10.7873 13.7814 10.6987 14.2511C10.61 14.7208 10.7069 15.2039 10.9721 15.6149C11.2374 16.026 11.6539 16.3386 12.1481 16.4974V18.633C12.1481 18.8116 12.2262 18.9829 12.3651 19.1092C12.504 19.2355 12.6924 19.3064 12.8889 19.3064C13.0853 19.3064 13.2738 19.2355 13.4127 19.1092C13.5516 18.9829 13.6296 18.8116 13.6296 18.633Z" fill="#007C8F"></path> <path d="M9 10.182V6.54787C9.002 4.21375 7.4308 2.25781 5.3656 2.02326C3.3004 1.78871 1.4132 3.35191 1 5.63922" stroke="#007C8F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </svg>
               </div>
               <div class="flex flex-col gap-2 min-w-0">
-                <h3 class="text-base leading-snug">{{:title}}</h3>
+                <h3 class="text-base leading-snug">{{:module_name}}</h3>
                 <a href="#" class="text-sky-700 text-xs font-medium hover:underline">Unlocked</a>
               </div>
             </div>
@@ -63,14 +63,18 @@ export class AWCView {
               <p class="text-slate-600 max-w-[780px] text-[0.8rem] h-4 overflow-hidden whitespace-nowrap text-ellipsis">{{:description}}</p>
               <div class="flex items-center gap-7 shrink-0">
                 <div class="flex items-center gap-6 text-slate-600">
+                  {{if modules_length}}
                   <span class="inline-flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="#0ea5e9"><path d="M6.99998 1.1665C5.84625 1.1665 4.71844 1.50862 3.75915 2.1496C2.79986 2.79057 2.05219 3.70161 1.61068 4.76752C1.16917 5.83342 1.05365 7.00631 1.27873 8.13786C1.50381 9.26942 2.05938 10.3088 2.87519 11.1246C3.69099 11.9404 4.73039 12.496 5.86195 12.7211C6.99351 12.9462 8.16639 12.8306 9.2323 12.3891C10.2982 11.9476 11.2092 11.1999 11.8502 10.2407C12.4912 9.28137 12.8333 8.15356 12.8333 6.99984C12.8317 5.45324 12.2166 3.97046 11.123 2.87685C10.0294 1.78324 8.54657 1.16814 6.99998 1.1665ZM10.141 7.44855H6.99998C6.88097 7.44855 6.76684 7.40128 6.68268 7.31713C6.59853 7.23298 6.55126 7.11884 6.55126 6.99984V3.85881C6.55126 3.7398 6.59853 3.62567 6.68268 3.54152C6.76684 3.45737 6.88097 3.41009 6.99998 3.41009C7.11898 3.41009 7.23312 3.45737 7.31727 3.54152C7.40142 3.62567 7.44869 3.7398 7.44869 3.85881V6.55112H10.141C10.26 6.55112 10.3741 6.59839 10.4583 6.68254C10.5424 6.7667 10.5897 6.88083 10.5897 6.99984C10.5897 7.11884 10.5424 7.23298 10.4583 7.31713C10.3741 7.40128 10.26 7.44855 10.141 7.44855Z"/></svg>
-                    <span class="text-xs font-medium text-slate-600">{{:time}}</span>
+                    <span class="text-xs font-medium text-slate-600">{{:modules_length}} min</span>
                   </span>
+                  {{/if}}
+                  {{if modules_unit}}
                   <span class="inline-flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="#0ea5e9"><path d="M4 6.75A1.75 1.75 0 0 1 5.75 5h12.5A1.75 1.75 0 0 1 20 6.75v10.5A1.75 1.75 0 0 1 18.25 19H5.75A1.75 1.75 0 0 1 4 17.25V6.75Zm2 .25v1.5h12V7H6Zm0 3v6.25h12V10H6Z"/></svg>
-                    <span class="text-xs font-medium text-slate-600">{{:units}} Units</span>
+                    <span class="text-xs font-medium text-slate-600">{{:modules_unit}} Lessons</span>
                   </span>
+                  {{/if}}
                 </div>
                 <button class="text-slate-500 hover:text-slate-700" data-module-toggle aria-expanded="false">
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform rotate-0" viewBox="0 0 24 24" fill="#0ea5e9"><path d="M6 9.75 12 15l6-5.25"/></svg>
@@ -85,13 +89,13 @@ export class AWCView {
                 <div class="flex-1 px-4 py-4 flex items-center justify-between">
                   <div class="flex items-center gap-3">
                     <span class="w-4 h-4 rounded-full border-2 border-slate-300 inline-block"></span>
-                    <span class="text-slate-800 font-medium text-sm">{{:title}}</span>
+                    <span class="text-slate-800 font-medium text-sm">{{:lesson_name}}</span>
                   </div>
                   <div class="flex items-center gap-4">
-                    {{if time}}
+                    {{if lesson_length}}
                     <span class="inline-flex items-center gap-1 text-sky-800 text-sm">
                       <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="#0ea5e9"><path d="M6.99998 1.1665C5.84625 1.1665 4.71844 1.50862 3.75915 2.1496C2.79986 2.79057 2.05219 3.70161 1.61068 4.76752C1.16917 5.83342 1.05365 7.00631 1.27873 8.13786C1.50381 9.26942 2.05938 10.3088 2.87519 11.1246C3.69099 11.9404 4.73039 12.496 5.86195 12.7211C6.99351 12.9462 8.16639 12.8306 9.2323 12.3891C10.2982 11.9476 11.2092 11.1999 11.8502 10.2407C12.4912 9.28137 12.8333 8.15356 12.8333 6.99984C12.8317 5.45324 12.2166 3.97046 11.123 2.87685C10.0294 1.78324 8.54657 1.16814 6.99998 1.1665ZM10.141 7.44855H6.99998C6.88097 7.44855 6.76684 7.40128 6.68268 7.31713C6.59853 7.23298 6.55126 7.11884 6.55126 6.99984V3.85881C6.55126 3.7398 6.59853 3.62567 6.68268 3.54152C6.76684 3.45737 6.88097 3.41009 6.99998 3.41009C7.11898 3.41009 7.23312 3.45737 7.31727 3.54152C7.40142 3.62567 7.44869 3.7398 7.44869 3.85881V6.55112H10.141C10.26 6.55112 10.3741 6.59839 10.4583 6.68254C10.5424 6.7667 10.5897 6.88083 10.5897 6.99984C10.5897 7.11884 10.5424 7.23298 10.4583 7.31713C10.3741 7.40128 10.26 7.44855 10.141 7.44855Z"/></svg>
-                      <span>{{:time}}</span>
+                      <span>{{:lesson_length}} min</span>
                     </span>
                     {{/if}}
                     <button class="px-3 py-1 bg-sky-700 text-white rounded-md text-sm inline-flex items-center gap-1">Start <svg class="w-4 h-4" viewBox="0 0 24 24" fill="#0ea5e9"><path d="M9.5 7l5 5-5 5"/></svg></button>
@@ -109,9 +113,22 @@ export class AWCView {
       $.templates(this.contentTemplateName, template);
   }
 
-  renderCourseContent(modules) {
+  updateCourseHeader(courseName = "") {
+    const el = document.getElementById("course-title");
+    if (!el) return;
+
+    const fallback = el.getAttribute("data-default-title") ?? "";
+    const nextTitle = courseName?.trim() ? courseName : fallback;
+    el.textContent = nextTitle;
+
+    if (courseName?.trim()) {
+      document.title = courseName;
+    }
+  }
+
+  renderCourseContent({ modules = [] } = {}) {
     this.createContentTemplate();
-    if (!modules || modules.length === 0) return;
+    if (!Array.isArray(modules) || modules.length === 0) return;
     const html = $.render[this.contentTemplateName]({ modules });
     const mount = document.getElementById("content-section");
     if (mount) {

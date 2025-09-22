@@ -2,6 +2,7 @@
 // This file consolidates the version that included announcement support,
 // guarded subscriptions, and section-aware voting/comment APIs.
 
+import { parentClassId, courseId } from "../sdk/config.js";
 export class AWCModel {
   constructor(plugin) {
     window.plugin = plugin;
@@ -57,7 +58,7 @@ export class AWCModel {
     this.subscribeToPosts();
     this.subscribeToAnnouncement();
     this.setupPostModelSubscription();
-    this.setupPostAnnouncementSubscription();
+    this.setupAnnouncementModelSubscription();
   }
 
   destroy() {
@@ -72,6 +73,23 @@ export class AWCModel {
       .deSelectAll()
       .select(["id", "course_name", "description"])
       .whereNotNull("course_name")
+      .andWhere("id", Number(courseId))
+      .andWhere("Classes", (q) => q.where("id", Number(parentClassId)))
+      .include("Modules", (child) => {
+        child
+          .deSelectAll()
+          .select([
+            "id",
+            "module_name",
+            "module_length_in_minute",
+            "number_of_lessons_in_module",
+          ])
+          .include("Lessons_As_Module", (child) => {
+            child
+              .deSelectAll()
+              .select(["id", "lesson_name", "lesson_length_in_hour"]);
+          });
+      })
       .noDestroy();
 
     return this.courseQuery;
@@ -91,12 +109,14 @@ export class AWCModel {
         "profile_image",
         "instructor_id",
       ])
+      .where("class_id", `${parentClassId}`)
+      .andWhere("class_id", Number(parentClassId))
       .include("Instructor", (q) => {
         q.deSelectAll().select([
           "display_name",
           "first_name",
           "last_name",
-          "profile_image",
+          "Instructor_Instructor_Image",
         ]);
       })
       .include("Announcement_Reactors_Data", (q) => {
@@ -112,12 +132,18 @@ export class AWCModel {
           .include("Member_Comment_Upvotes_Data", (child) =>
             child.deSelectAll().select(["id"])
           )
+          .include("Author", (child) =>
+            child.deSelectAll().select(["display_name"])
+          )
           .include("ForumComments", (child) => {
             child
               .deSelectAll()
               .select(["id", "comment"])
               .include("Member_Comment_Upvotes_Data", (grand) =>
                 grand.deSelectAll().select(["id"])
+              )
+              .include("Author", (grand) =>
+                grand.deSelectAll().select(["display_name"])
               );
           });
       })
@@ -143,13 +169,13 @@ export class AWCModel {
 
   async fetchCourseContent() {
     try {
-      await this.courseQuery
+      let courses = await this.courseQuery
         .fetch()
         .pipe(window.toMainInstance?.(true) ?? ((x) => x))
         .toPromise();
-      this.renderFromCourseContentState();
+      this.renderFromCourseContentState(courses);
     } catch (e) {
-      console.log("Error", e.error);
+      console.log("Error", e);
     }
   }
 
@@ -159,6 +185,7 @@ export class AWCModel {
       .deSelectAll()
       .select(["id"])
       .where("forum_status", "Published - Not flagged")
+      .andWhere("parent_class_id", `${parentClassId}`)
       .orderBy("created_at", "desc")
       .include("Author", (q) =>
         q.deSelectAll().select(["id", "Display_Name", "is_instructor"])
@@ -210,9 +237,8 @@ export class AWCModel {
     if (this.forumDataCallback) this.forumDataCallback(postRecs);
   }
 
-  renderFromCourseContentState() {
-    const courseRecs = this.courseQuery.getAllRecordsArray();
-    if (this.courseDataCallback) this.courseDataCallback(courseRecs);
+  renderFromCourseContentState(data) {
+    if (this.courseDataCallback) this.courseDataCallback(data);
   }
 
   renderAnnouncementState() {
@@ -225,15 +251,13 @@ export class AWCModel {
   }
 
   subscribeToPosts() {
-    this.unsubscribeAll();
+    if (this.postSubscription) this.postSubscription.unsubscribe?.();
     try {
-      let liveObs;
-      if (this.PostQuery.subscribe) {
-        liveObs = this.PostQuery.subscribe();
-      } else {
-        liveObs = this.PostQuery.localSubscribe();
-      }
-      const liveSub = liveObs
+      const liveObs = this.PostQuery.subscribe
+        ? this.PostQuery.subscribe()
+        : this.PostQuery.localSubscribe();
+
+      this.postSubscription = liveObs
         .pipe(window.toMainInstance?.(true) ?? ((x) => x))
         .subscribe({
           next: (payload) => {
@@ -242,26 +266,25 @@ export class AWCModel {
               : Array.isArray(payload)
               ? payload
               : [];
-            if (this.forumDataCallback)
+            if (this.forumDataCallback) {
               requestAnimationFrame(() => this.forumDataCallback(data));
+            }
           },
-          error: () => {},
         });
-      this.subscriptions.add(liveSub);
-      this.announcementSubscription = liveSub;
+
+      this.subscriptions.add(this.postSubscription);
     } catch {}
   }
 
   subscribeToAnnouncement() {
-    this.unsubscribeAll(); // or a dedicated unsubscribe just for announcements
+    if (this.announcementSubscription)
+      this.announcementSubscription.unsubscribe?.();
     try {
-      if (!this.announcementQuery) return;
-
       const liveObs = this.announcementQuery.subscribe
         ? this.announcementQuery.subscribe()
         : this.announcementQuery.localSubscribe();
 
-      const liveSub = liveObs
+      this.announcementSubscription = liveObs
         .pipe(window.toMainInstance?.(true) ?? ((x) => x))
         .subscribe({
           next: (payload) => {
@@ -277,12 +300,30 @@ export class AWCModel {
               requestAnimationFrame(() => this.announcementCallback(data));
             }
           },
-          error: () => {},
         });
 
-      this.subscriptions.add(liveSub);
-      this.announcementSubscription = liveSub; // keep a ref if needed
+      this.subscriptions.add(this.announcementSubscription);
     } catch {}
+  }
+
+  setupPostModelSubscription() {
+    const modelUnsub = eduflowproForumPostmodel.subscribe?.({
+      next: (data) => {
+        // this.renderFromState()
+      },
+      error: () => {},
+    });
+    if (modelUnsub) this.subscriptions.add(modelUnsub);
+  }
+
+  setupAnnouncementModelSubscription() {
+    const modelUnsub = eduflowproForumPostmodel.subscribe?.({
+      next: (data) => {
+        // this.renderFromState()
+      },
+      error: () => {},
+    });
+    if (modelUnsub) this.subscriptions.add(modelUnsub);
   }
 
   async createPost({ authorId, copy, fileMeta }) {
@@ -315,35 +356,6 @@ export class AWCModel {
     } catch (error) {
       throw error;
     }
-  }
-
-  setupPostModelSubscription() {
-    const modelUnsub = eduflowproForumPostmodel.subscribe?.({
-      next: ({ type }) => {
-        // Refetch on create/delete; incremental render is fine for simple updates.
-        if (type === "create" || type === "delete") {
-          this.fetchPosts().catch(() => {});
-        } else {
-          this.renderForumPostState();
-        }
-      },
-      error: () => {},
-    });
-    if (modelUnsub) this.subscriptions.add(modelUnsub);
-  }
-
-  setupPostAnnouncementSubscription() {
-    const modelUnsub = eduflowproAnnouncementModel.subscribe?.({
-      next: ({ type }) => {
-        if (type === "create" || type === "delete") {
-          this.fetchAnnouncement().catch(() => {});
-        } else {
-          this.renderAnnouncementState();
-        }
-      },
-      error: () => {},
-    });
-    if (modelUnsub) this.subscriptions.add(modelUnsub);
   }
 
   unsubscribeAll() {

@@ -160,20 +160,37 @@ export function hideLoader() {
 //-------------------------------------------------------------------------Course ---------------------------------------------//
 
 export function courseMapper(data) {
-  const courses = Object.values(data).map((item) => {
-    return {
-      title: item.course_name,
-      description: item.description,
-      time: "79 min",
-      units: 7,
-      lessons: [
-        { title: "Creating core characters" },
-        { title: "World-building basics" },
-      ],
-    };
-  });
+  if (!data) return { courseName: "", modules: [] };
 
-  return courses;
+  const entries = Object.values(data ?? {});
+  const courseName = entries[0]?.course_name ?? "";
+
+  const modules = entries.reduce((acc, item) => {
+    const list = getAllModules(item?.Modules);
+    if (Array.isArray(list) && list.length) acc.push(...list);
+    return acc;
+  }, []);
+
+  return { courseName, modules };
+}
+
+function getAllModules(modules = {}) {
+  return Object.values(modules || {}).map((item) => ({
+    id: item?.id ?? null,
+    module_name: item?.module_name ?? "",
+    description: item?.description ?? "",
+    modules_unit: item?.number_of_lessons_in_module ?? null,
+    modules_length: item?.module_length_in_minute ?? null,
+    lessons: getAllLessons(item?.Lessons_As_Module),
+  }));
+}
+
+function getAllLessons(lessons = {}) {
+  return Object.values(lessons || {}).map((lesson) => ({
+    id: lesson?.id ?? null,
+    lesson_name: lesson?.lesson_name ?? "",
+    lesson_length: lesson?.lesson_length_in_minute ?? null,
+  }));
 }
 
 //-------------------------------------------------------------------------Announcement ---------------------------------------------//

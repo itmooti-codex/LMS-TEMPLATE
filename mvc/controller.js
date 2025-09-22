@@ -160,8 +160,9 @@ export class AWCController {
       });
 
       this.model.onCourseData((records) => {
-        const modules = courseMapper(records);
-        this.view.renderCourseContent(modules);
+        const { courseName, modules } = courseMapper(records);
+        this.view.updateCourseHeader(courseName);
+        this.view.renderCourseContent({ modules });
       });
 
       await this.model.init();

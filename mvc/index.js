@@ -6,13 +6,14 @@
 
 import { config } from "../sdk/config.js";
 import { VitalStatsSDK } from "../sdk/init.js";
-import { createLoaderModal } from "../utils/helper.js";
+import { createLoaderModal, showLoader, hideLoader } from "../utils/helper.js";
 import { AWCModel } from "./model.js";
 import { AWCController } from "./controller.js";
 import { AWCView } from "./view.js";
 
 (async function bootstrap() {
   createLoaderModal();
+  showLoader();
   try {
     const { slug, apiKey } = config;
     const sdk = new VitalStatsSDK({ slug, apiKey });
