@@ -332,6 +332,7 @@ export class AWCModel {
       published_date: Math.floor(Date.now() / 1000).toString(),
       author_id: authorId,
       copy,
+      parent_class_id: parentClassId,
       forum_status: "Published - Not flagged",
     };
     if (fileMeta && fileMeta.file_link) {
