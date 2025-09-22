@@ -12,6 +12,18 @@ export class AWCController {
     this.currentAuthorId = "62";
     this.myForumPosts = [];
     this.allForumPosts = [];
+    this.enrolmentId = Number(window.enrolmentId ?? 1);
+    this.modules = [];
+    this.progressState = {
+      enrolmentId: this.enrolmentId,
+      lastLessonId: null,
+      inProgressLessonIds: [],
+      completedLessonIds: [],
+      lessonUrlMap: {},
+    };
+    this.boundCrossWindowHandler = (event) =>
+      this.handleCrossWindowMessage(event);
+    window.addEventListener("message", this.boundCrossWindowHandler);
     this.initialListners();
   }
 
@@ -159,11 +171,23 @@ export class AWCController {
         this.view.renderAnnouncement(x);
       });
 
-      this.model.onCourseData((records) => {
-        const { courseName, modules } = courseMapper(records);
-        this.view.updateCourseHeader(courseName);
-        this.view.renderCourseContent({ modules });
+      this.model.onCourseData(async (records) => {
+        try {
+          const { courseName, modules } = courseMapper(records);
+          this.modules = Array.isArray(modules) ? modules : [];
+          this.view.updateCourseHeader(courseName);
+          await this.refreshProgressState({ modules: this.modules });
+        } catch (err) {
+          console.error("Error preparing course data:", err);
+        }
       });
+
+      this.view.registerLessonActionHandler((payload) =>
+        this.handleLessonLaunch(payload)
+      );
+      this.view.registerBannerActionHandler((payload) =>
+        this.handleBannerLaunch(payload)
+      );
 
       await this.model.init();
       this.wirePostEvents();
@@ -174,6 +198,213 @@ export class AWCController {
     } finally {
       hideLoader();
     }
+  }
+
+  async refreshProgressState({ modules = this.modules } = {}) {
+    if (Array.isArray(modules)) this.modules = modules;
+    try {
+      const progress = await this.model.fetchEnrolmentProgress(
+        this.enrolmentId
+      );
+      this.progressState = this.augmentProgressData(progress);
+      this.view.renderCourseContent({
+        modules: this.modules,
+        progress: this.progressState,
+      });
+      this.view.updateResumeBanner(this.progressState);
+    } catch (err) {
+      console.error("Error refreshing enrolment progress:", err);
+    }
+  }
+
+  augmentProgressData(progress = {}) {
+    const cleaned = {
+      enrolmentId: progress?.enrolmentId ?? this.enrolmentId ?? null,
+      lastLessonId:
+        progress?.lastLessonId != null
+          ? Number(progress.lastLessonId)
+          : null,
+      inProgressLessonIds: Array.isArray(progress?.inProgressLessonIds)
+        ? progress.inProgressLessonIds.map((id) => Number(id))
+        : [],
+      completedLessonIds: Array.isArray(progress?.completedLessonIds)
+        ? progress.completedLessonIds.map((id) => Number(id))
+        : [],
+      lessonUrlMap: {},
+      resumeLessonName: "",
+      resumeModuleName: "",
+      resumeUrl: "",
+    };
+
+    const inProgressSet = new Set(cleaned.inProgressLessonIds);
+    const completedSet = new Set(cleaned.completedLessonIds);
+
+    for (const module of this.modules || []) {
+      const lessons = Array.isArray(module?.lessons) ? module.lessons : [];
+      for (const lesson of lessons) {
+        const lessonId = Number(lesson?.id);
+        if (!lessonId) continue;
+        const preparedUrl = this.buildLessonUrl(
+          lesson?.lesson_template_url,
+          lessonId
+        );
+        cleaned.lessonUrlMap[lessonId] = preparedUrl;
+
+        if (cleaned.lastLessonId && lessonId === cleaned.lastLessonId) {
+          cleaned.resumeLessonName = lesson?.lesson_name ?? "";
+          cleaned.resumeModuleName = module?.module_name ?? "";
+          cleaned.resumeUrl = preparedUrl;
+          inProgressSet.add(lessonId);
+        }
+      }
+    }
+
+    cleaned.inProgressLessonIds = Array.from(inProgressSet);
+    cleaned.completedLessonIds = Array.from(completedSet);
+
+    if (!cleaned.resumeUrl) {
+      const fallback = this.getFirstLesson();
+      if (fallback.lesson && fallback.module) {
+        const lessonId = Number(fallback.lesson.id);
+        if (lessonId) {
+          cleaned.resumeUrl = this.buildLessonUrl(
+            fallback.lesson.lesson_template_url,
+            lessonId
+          );
+          cleaned.resumeLessonName = fallback.lesson.lesson_name ?? "";
+          cleaned.resumeModuleName = fallback.module.module_name ?? "";
+        }
+      }
+    }
+
+    return cleaned;
+  }
+
+  buildLessonUrl(baseUrl, lessonId) {
+    let sourceUrl = baseUrl;
+    if (!sourceUrl) {
+      const { lesson } = this.getLessonById(lessonId);
+      sourceUrl = lesson?.lesson_template_url ?? "";
+      if (!sourceUrl) return "";
+    }
+    try {
+      const url = new URL(sourceUrl, window.location.href);
+      if (lessonId != null) url.searchParams.set("lessonId", String(lessonId));
+      if (this.enrolmentId) {
+        url.searchParams.set("enrolmentId", String(this.enrolmentId));
+      }
+      return url.href;
+    } catch (err) {
+      const params = new URLSearchParams();
+      if (lessonId != null) params.set("lessonId", String(lessonId));
+      if (this.enrolmentId)
+        params.set("enrolmentId", String(this.enrolmentId));
+      const separator = sourceUrl.includes("?") ? "&" : "?";
+      return `${sourceUrl}${separator}${params.toString()}`;
+    }
+  }
+
+  getFirstLesson() {
+    for (const module of this.modules || []) {
+      const lessons = Array.isArray(module?.lessons) ? module.lessons : [];
+      if (lessons.length) {
+        return { lesson: lessons[0], module };
+      }
+    }
+    return { lesson: null, module: null };
+  }
+
+  getLessonById(lessonId) {
+    const targetId = Number(lessonId);
+    if (!targetId) return { lesson: null, module: null };
+    for (const module of this.modules || []) {
+      const lessons = Array.isArray(module?.lessons) ? module.lessons : [];
+      const lesson = lessons.find((item) => Number(item?.id) === targetId);
+      if (lesson) return { lesson, module };
+    }
+    return { lesson: null, module: null };
+  }
+
+  handleCrossWindowMessage(event) {
+    const payload = event?.data;
+    if (!payload || typeof payload !== "object") return;
+    const targetEnrolment =
+      payload.enrolmentId != null ? Number(payload.enrolmentId) : null;
+    if (targetEnrolment && targetEnrolment !== this.enrolmentId) return;
+
+    const type = payload.type;
+    if (
+      type === "lesson-completed" ||
+      type === "lesson-progress-updated" ||
+      type === "lesson-state-refresh"
+    ) {
+      this.refreshProgressState();
+    }
+  }
+
+  async handleLessonLaunch({ event, lessonId, url, lessonStatus } = {}) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    const id = Number(lessonId);
+    if (!id || lessonStatus === "completed") return;
+
+    const launchUrl =
+      url ||
+      this.progressState.lessonUrlMap?.[id] ||
+      this.buildLessonUrl(null, id);
+    const sanitizedUrl = launchUrl && launchUrl !== "#" ? launchUrl : null;
+    const popup = sanitizedUrl
+      ? window.open(sanitizedUrl, "_blank", "noopener")
+      : null;
+
+    try {
+      const tasks = [
+        this.model.updateEnrolmentLastLesson({
+          enrolmentId: this.enrolmentId,
+          lessonId: id,
+        }),
+      ];
+      const alreadyInProgress = this.progressState.inProgressLessonIds.some(
+        (current) => Number(current) === id
+      );
+      if (!alreadyInProgress) {
+        tasks.push(
+          this.model.markLessonInProgress({
+            enrolmentId: this.enrolmentId,
+            lessonId: id,
+          })
+        );
+      }
+      await Promise.all(tasks);
+    } catch (err) {
+      console.error("Error updating enrolment progress:", err);
+    } finally {
+      await this.refreshProgressState();
+      if (popup && !popup.closed && sanitizedUrl) {
+        try {
+          popup.location.replace(sanitizedUrl);
+        } catch (err) {
+          // ignore cross-origin navigation errors
+        }
+      } else if (!popup && sanitizedUrl) {
+        window.open(sanitizedUrl, "_blank", "noopener");
+      }
+    }
+  }
+
+  async handleBannerLaunch({ event, lessonId, url } = {}) {
+    if (!Array.isArray(this.modules) || this.modules.length === 0) return;
+    const explicitLessonId = Number(lessonId);
+    const bannerLessonId =
+      explicitLessonId || this.progressState.lastLessonId;
+    const id =
+      bannerLessonId || Number(this.getFirstLesson().lesson?.id ?? null);
+    if (!id) return;
+    const launchUrl =
+      url || this.progressState.lessonUrlMap?.[id] || this.buildLessonUrl(null, id);
+    await this.handleLessonLaunch({ event, lessonId: id, url: launchUrl });
   }
 
   async tributeHandler() {

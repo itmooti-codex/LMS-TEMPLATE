@@ -21,6 +21,15 @@ export class AWCModel {
       "EduflowproMemberCommentUpvotesForumCommentUpvotes"
     );
     window.contactModal = plugin.switchTo("EduflowproContact");
+    this.enrolmentId = Number(window.enrolmentId ?? 1);
+    this.enrolmentModel = plugin.switchTo("EduflowproEnrolment");
+    this.lessonModel = plugin.switchTo("EduflowproLesson");
+    this.inProgressModel = plugin.switchTo(
+      "EduflowproOInProgressLessonContactinProgress"
+    );
+    this.lessonCompletionModel = plugin.switchTo(
+      "EduflowproOEnrolmentLessonCompLessonCompletion"
+    );
     this.limit = 500;
     this.offset = 0;
     this.PostQuery = null;
@@ -329,6 +338,166 @@ export class AWCModel {
       error: () => {},
     });
     if (modelUnsub) this.subscriptions.add(modelUnsub);
+  }
+
+  async fetchEnrolmentProgress(enrolmentId = this.enrolmentId) {
+    const id = Number(enrolmentId);
+    if (!id) {
+      return {
+        enrolmentId: null,
+        lastLessonId: null,
+        inProgressLessonIds: [],
+        completedLessonIds: [],
+      };
+    }
+
+    const [lastLessonId, inProgressLessonIds, completedLessonIds] =
+      await Promise.all([
+        this.fetchLastLessonId(id),
+        this.fetchInProgressLessons(id),
+        this.fetchCompletedLessons(id),
+      ]);
+
+    return {
+      enrolmentId: id,
+      lastLessonId,
+      inProgressLessonIds,
+      completedLessonIds,
+    };
+  }
+
+  async fetchLastLessonId(enrolmentId = this.enrolmentId) {
+    const id = Number(enrolmentId);
+    if (!id) return null;
+    const query = this.enrolmentModel
+      .query()
+      .deSelectAll()
+      .where("id", id)
+      .select(["last_lesson_id"]);
+    // query.getOrInitQueryCalc?.();
+    // query.field("last_lesson_id", "lastLessonId");
+
+    const payload = await query
+      .noDestroy()
+      .fetch()
+      .pipe(window.toMainInstance?.(true) ?? ((x) => x))
+      .toPromise();
+
+    const records = Array.isArray(payload?.records)
+      ? payload.records
+      : query.getAllRecordsArray?.() ?? [];
+
+    const value = records?.[0]?.lastLessonId ?? null;
+    return value != null ? Number(value) : null;
+  }
+
+  async fetchInProgressLessons(enrolmentId = this.enrolmentId) {
+    const id = Number(enrolmentId);
+    if (!id) return [];
+
+    const query = this.inProgressModel
+      .query()
+      .deSelectAll()
+      .where("contact_in_progress_id", id)
+      .select([("id", "in_progress_lesson_id")]);
+    // query.getOrInitQueryCalc?.();
+    // query.field("id", "id");
+    // query.field("in_progress_lesson_id", "lessonId");
+
+    const payload = await query
+      .noDestroy()
+      .fetch()
+      .pipe(window.toMainInstance?.(true) ?? ((x) => x))
+      .toPromise();
+
+    const records = Array.isArray(payload?.records)
+      ? payload.records
+      : query.getAllRecordsArray?.() ?? [];
+
+    return records
+      .map((item) => {
+        const value = item?.lessonId ?? item?.in_progress_lesson_id;
+        return value != null ? Number(value) : null;
+      })
+      .filter((value) => value != null);
+  }
+
+  async fetchCompletedLessons(enrolmentId = this.enrolmentId) {
+    const id = Number(enrolmentId);
+    if (!id) return [];
+
+    const query = this.lessonCompletionModel
+      .query()
+      .deSelectAll()
+      .where("enrolment_lesson_completion_id", id)
+      .select(["id", "lesson_completion_id"]);
+    // query.getOrInitQueryCalc?.();
+    // query.field("id", "id");
+    // query.field("lesson_completion_id", "lessonId");
+
+    const payload = await query
+      .noDestroy()
+      .fetch()
+      .pipe(window.toMainInstance?.(true) ?? ((x) => x))
+      .toPromise();
+
+    const records = Array.isArray(payload?.records)
+      ? payload.records
+      : query.getAllRecordsArray?.() ?? [];
+
+    return records
+      .map((item) => {
+        const value = item?.lessonId ?? item?.lesson_completion_id;
+        return value != null ? Number(value) : null;
+      })
+      .filter((value) => value != null);
+  }
+
+  async updateEnrolmentLastLesson({
+    enrolmentId = this.enrolmentId,
+    lessonId = null,
+  } = {}) {
+    const id = Number(enrolmentId);
+    if (!id) return null;
+    const payload = {};
+    if (lessonId != null) payload.last_lesson_id = Number(lessonId);
+    else payload.last_lesson_id = null;
+
+    const mutation = this.enrolmentModel.mutation();
+    mutation.update((query) => query.where("id", id).set(payload));
+
+    return await mutation.execute(true).toPromise();
+  }
+
+  async markLessonInProgress({
+    enrolmentId = this.enrolmentId,
+    lessonId,
+  } = {}) {
+    const id = Number(enrolmentId);
+    const lesson = lessonId != null ? Number(lessonId) : null;
+    if (!id || !lesson) return null;
+
+    const mutation = this.inProgressModel.mutation();
+    mutation.createOne({
+      contact_in_progress_id: id,
+      in_progress_lesson_id: lesson,
+    });
+
+    return await mutation.execute(true).toPromise();
+  }
+
+  async markLessonCompleted({ enrolmentId = this.enrolmentId, lessonId } = {}) {
+    const id = Number(enrolmentId);
+    const lesson = lessonId != null ? Number(lessonId) : null;
+    if (!id || !lesson) return null;
+
+    const mutation = this.lessonCompletionModel.mutation();
+    mutation.createOne({
+      enrolment_lesson_completion_id: id,
+      lesson_completion_id: lesson,
+    });
+
+    return await mutation.execute(true).toPromise();
   }
 
   async createPost({ authorId, copy, fileMeta }) {

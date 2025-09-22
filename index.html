@@ -21,6 +21,8 @@
       const parentClassIdFromOp = "2";
       const courseIdFromOp = "46";
       const loggedInUserID = "62";
+      const enrolmentIdFromOp = "37";
+      window.enrolmentId = Number(enrolmentIdFromOp);
     </script>
   </head>
   <body class="bg-sky-50 text-slate-800">
@@ -76,18 +78,29 @@
             class="mt-6 flex w-full flex-col items-center gap-4 sm:flex-row sm:justify-center md:w-auto md:items-start md:justify-start"
           >
             <button
-              class="flex w-full items-center justify-center gap-2 rounded-lg bg-white px-5 py-2 font-semibold text-sky-700 shadow-sm hover:bg-slate-100 sm:w-auto"
+              id="course-resume-button"
+              type="button"
+              class="flex w-full items-center justify-center gap-2 rounded-lg bg-white px-5 py-2 font-semibold text-sky-700 shadow-sm transition hover:bg-slate-100 sm:w-auto"
+              data-state="start"
             >
-              Resume
+              <span id="course-resume-label">Start</span>
               <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M6 4l8 6-8 6V4z" />
               </svg>
             </button>
-            <div class="leading-snug text-center sm:text-left">
-              <p class="text-emerald-200/95 font-medium">Resume to</p>
-              <p class="text-white/95">
-                <span class="font-semibold">Module 3 Assignment</span> ( TEST2
-                Module 3: Write magnetic beginnings )
+            <div
+              id="resume-details"
+              class="leading-snug text-center sm:text-left hidden"
+            >
+              <p class="text-emerald-200/95 font-medium" id="resume-headline">
+                Resume to
+              </p>
+              <p class="text-white/95" id="resume-description">
+                <span class="font-semibold" id="resume-lesson-name"></span>
+                <span
+                  class="block text-white/85 sm:inline sm:ml-1"
+                  id="resume-module-name"
+                ></span>
               </p>
             </div>
           </div>

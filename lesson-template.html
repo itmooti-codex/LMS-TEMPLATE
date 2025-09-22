@@ -224,6 +224,30 @@
                 />
               </svg>
             </a>
+            <button
+              id="complete-lesson-button"
+              type="button"
+              class="mt-4 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+              data-state="idle"
+            >
+              <span class="button-label">Complete this lesson</span>
+              <svg
+                class="h-4 w-4"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  d="M16.707 5.293a1 1 0 010 1.414l-7.25 7.25a1 1 0 01-1.414 0l-3-3a1 1 0 111.414-1.414L8.5 11.086l6.543-6.543a1 1 0 011.414 0z"
+                />
+              </svg>
+            </button>
+            <p
+              id="lesson-complete-feedback"
+              class="mt-2 text-xs font-medium text-emerald-700 hidden"
+            >
+              Lesson marked as complete. You can close this tab.
+            </p>
           </section>
 
           <section
@@ -290,5 +314,130 @@
         </div>
       </div>
     </footer>
+    <script type="module">
+      import { config } from "./sdk/config.js";
+      import { VitalStatsSDK } from "./sdk/init.js";
+
+      const button = document.getElementById("complete-lesson-button");
+      const feedback = document.getElementById("lesson-complete-feedback");
+      const label = button?.querySelector(".button-label");
+
+      if (button && label) {
+        const params = new URLSearchParams(window.location.search);
+        const lessonId = Number(params.get("lessonId"));
+        const enrolmentIdFromQuery = Number(params.get("enrolmentId"));
+        const fallbackEnrolment = Number(
+          window.opener?.enrolmentId ?? window.enrolmentId ?? 0
+        );
+        const enrolmentId = enrolmentIdFromQuery || fallbackEnrolment || 0;
+
+        if (enrolmentId) {
+          window.enrolmentId = enrolmentId;
+        }
+
+        if (!lessonId || !enrolmentId) {
+          label.textContent = "Lesson context unavailable";
+          button.dataset.state = "disabled";
+          button.disabled = true;
+          button.classList.remove("bg-emerald-600", "hover:bg-emerald-500");
+          button.classList.add(
+            "bg-slate-200",
+            "text-slate-500",
+            "cursor-not-allowed"
+          );
+        } else {
+          const { slug, apiKey } = config;
+          let completionModelPromise = null;
+
+          const getCompletionModel = async () => {
+            if (!completionModelPromise) {
+              const sdk = new VitalStatsSDK({ slug, apiKey });
+              completionModelPromise = sdk
+                .initialize()
+                .then((plugin) =>
+                  plugin.switchTo(
+                    "EduflowproOEnrolmentLessonCompLessonCompletion"
+                  )
+                )
+                .catch((error) => {
+                  completionModelPromise = null;
+                  throw error;
+                });
+            }
+            return completionModelPromise;
+          };
+
+          button.addEventListener("click", async () => {
+            const currentState = button.dataset.state;
+            if (currentState === "loading" || currentState === "completed")
+              return;
+
+            button.dataset.state = "loading";
+            label.textContent = "Marking...";
+            button.disabled = true;
+            button.classList.add("opacity-80", "cursor-wait");
+
+            if (feedback) {
+              feedback.classList.add("hidden");
+              feedback.classList.remove("text-rose-600");
+            }
+
+            try {
+              const completionModel = await getCompletionModel();
+              const mutation = completionModel.mutation();
+              mutation.createOne({
+                lesson_completion_id: lessonId,
+                enrolment_lesson_completion_id: enrolmentId,
+              });
+              await mutation.execute(true).toPromise();
+
+              label.textContent = "Lesson completed";
+              button.dataset.state = "completed";
+              button.classList.remove(
+                "bg-emerald-600",
+                "hover:bg-emerald-500",
+                "opacity-80",
+                "cursor-wait"
+              );
+              button.classList.add(
+                "bg-emerald-100",
+                "text-emerald-700",
+                "cursor-default"
+              );
+              if (feedback) {
+                feedback.textContent =
+                  "Lesson marked as complete. You can close this tab.";
+                feedback.classList.remove("hidden");
+              }
+
+              try {
+                window.opener?.postMessage(
+                  { type: "lesson-completed", lessonId, enrolmentId },
+                  "*"
+                );
+              } catch (postMessageError) {
+                console.warn(
+                  "Unable to notify opener window",
+                  postMessageError
+                );
+              }
+            } catch (error) {
+              console.error("Failed to mark lesson complete", error);
+              button.dataset.state = "idle";
+              button.disabled = false;
+              button.classList.remove("opacity-80", "cursor-wait");
+              button.classList.add("bg-emerald-600", "hover:bg-emerald-500");
+              label.textContent = "Complete this lesson";
+              if (feedback) {
+                feedback.textContent =
+                  "Something went wrong. Please try again.";
+                feedback.classList.remove("hidden");
+                feedback.classList.add("text-rose-600");
+              }
+            }
+          });
+        }
+      }
+    </script>
   </body>
 </html>
