@@ -87,7 +87,12 @@ export class AWCModel {
           .include("Lessons_As_Module", (child) => {
             child
               .deSelectAll()
-              .select(["id", "lesson_name", "lesson_length_in_hour"]);
+              .select([
+                "id",
+                "lesson_name",
+                "lesson_length_in_hour",
+                "edu_lesson_template_url",
+              ]);
           });
       })
       .noDestroy();

@@ -190,6 +190,7 @@ function getAllLessons(lessons = {}) {
     id: lesson?.id ?? null,
     lesson_name: lesson?.lesson_name ?? "",
     lesson_length: lesson?.lesson_length_in_minute ?? null,
+    lesson_template_url: lesson?.edu_lesson_template_url ?? null,
   }));
 }
 

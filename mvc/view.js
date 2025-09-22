@@ -98,7 +98,7 @@ export class AWCView {
                       <span>{{:lesson_length}} min</span>
                     </span>
                     {{/if}}
-                    <button class="px-3 py-1 bg-sky-700 text-white rounded-md text-sm inline-flex items-center gap-1">Start <svg class="w-4 h-4" viewBox="0 0 24 24" fill="#0ea5e9"><path d="M9.5 7l5 5-5 5"/></svg></button>
+                    <a href = "{{:lesson_template_url}}" target = "_blank" class="px-3 py-1 bg-sky-700 text-white rounded-md text-sm inline-flex items-center gap-1">Start <svg class="w-4 h-4" viewBox="0 0 24 24" fill="#0ea5e9"><path d="M9.5 7l5 5-5 5"/></svg></a>
                   </div>
                 </div>
               </div>
