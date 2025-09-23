@@ -66,10 +66,10 @@ if (button && label) {
         const completionModel = await getCompletionModel();
         const mutation = completionModel.mutation();
         mutation.createOne({
-          lesson_completion_id: lessonId,
-          enrolment_lesson_completion_id: enrolmentId,
+          Lesson_Completion_ID: lessonId,
+          Enrolment_Lesson_Completion_ID: enrolmentId,
         });
-        await mutation.execute(true).toPromise();
+        let x = await mutation.execute(true).toPromise();
 
         label.textContent = "Lesson completed";
         button.dataset.state = "completed";

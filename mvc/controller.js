@@ -221,9 +221,7 @@ export class AWCController {
     const cleaned = {
       enrolmentId: progress?.enrolmentId ?? this.enrolmentId ?? null,
       lastLessonId:
-        progress?.lastLessonId != null
-          ? Number(progress.lastLessonId)
-          : null,
+        progress?.lastLessonId != null ? Number(progress.lastLessonId) : null,
       inProgressLessonIds: Array.isArray(progress?.inProgressLessonIds)
         ? progress.inProgressLessonIds.map((id) => Number(id))
         : [],
@@ -297,8 +295,7 @@ export class AWCController {
     } catch (err) {
       const params = new URLSearchParams();
       if (lessonId != null) params.set("lessonId", String(lessonId));
-      if (this.enrolmentId)
-        params.set("enrolmentId", String(this.enrolmentId));
+      if (this.enrolmentId) params.set("enrolmentId", String(this.enrolmentId));
       const separator = sourceUrl.includes("?") ? "&" : "?";
       return `${sourceUrl}${separator}${params.toString()}`;
     }
@@ -348,7 +345,7 @@ export class AWCController {
       event.stopPropagation();
     }
     const id = Number(lessonId);
-    if (!id || lessonStatus === "completed") return;
+    if (!id) return;
 
     const launchUrl =
       url ||
@@ -397,13 +394,14 @@ export class AWCController {
   async handleBannerLaunch({ event, lessonId, url } = {}) {
     if (!Array.isArray(this.modules) || this.modules.length === 0) return;
     const explicitLessonId = Number(lessonId);
-    const bannerLessonId =
-      explicitLessonId || this.progressState.lastLessonId;
+    const bannerLessonId = explicitLessonId || this.progressState.lastLessonId;
     const id =
       bannerLessonId || Number(this.getFirstLesson().lesson?.id ?? null);
     if (!id) return;
     const launchUrl =
-      url || this.progressState.lessonUrlMap?.[id] || this.buildLessonUrl(null, id);
+      url ||
+      this.progressState.lessonUrlMap?.[id] ||
+      this.buildLessonUrl(null, id);
     await this.handleLessonLaunch({ event, lessonId: id, url: launchUrl });
   }
 

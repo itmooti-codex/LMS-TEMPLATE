@@ -161,7 +161,9 @@
             <h2 class="text-lg font-semibold text-slate-900 sm:text-xl">
               Dive Into the Lesson Notes
             </h2>
-            <div class="mt-5 space-y-6 leading-relaxed text-slate-700">
+            <div
+              class="mt-5 space-y-6 leading-relaxed text-justify text-slate-700"
+            >
               <p>
                 Strong introductions signal confidence and clarity. Start by
                 centering your reader with a vivid moment or bold statement,
@@ -197,6 +199,36 @@
         </div>
 
         <aside class="space-y-6">
+          <!-- Completion Section (Top) -->
+          <section
+            class="rounded-2xl bg-white p-6 shadow-md ring-1 ring-slate-900/5 text-center"
+          >
+            <h2 class="text-base font-semibold text-slate-900">
+              Ready to Finish?
+            </h2>
+            <p class="mt-2 text-sm text-slate-600">
+              Once you’ve reviewed the materials, mark this lesson complete to
+              track your progress.
+            </p>
+
+            <button
+              id="complete-lesson-button"
+              type="button"
+              class="mt-4 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+              data-state="idle"
+            >
+              <span class="button-label">✅ Complete this lesson</span>
+            </button>
+
+            <p
+              id="lesson-complete-feedback"
+              class="mt-3 text-xs font-medium text-emerald-700 hidden"
+            >
+              Lesson marked as complete. 🎉 You can close this tab.
+            </p>
+          </section>
+
+          <!-- Downloadable Resources (Below Completion Section) -->
           <section
             class="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-900/5"
           >
@@ -208,11 +240,11 @@
               introduction.
             </p>
             <a
-              href="assets/lesson-outline.pdf"
+              href="[Page//File Download##link]"
               download
               class="mt-4 flex items-center justify-between rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-medium text-sky-700 transition hover:bg-sky-100"
             >
-              Lesson Outline (PDF)
+              [Page//File Download##name]
               <svg
                 class="h-5 w-5"
                 viewBox="0 0 20 20"
@@ -224,79 +256,6 @@
                 />
               </svg>
             </a>
-            <button
-              id="complete-lesson-button"
-              type="button"
-              class="mt-4 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
-              data-state="idle"
-            >
-              <span class="button-label">Complete this lesson</span>
-              <svg
-                class="h-4 w-4"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  d="M16.707 5.293a1 1 0 010 1.414l-7.25 7.25a1 1 0 01-1.414 0l-3-3a1 1 0 111.414-1.414L8.5 11.086l6.543-6.543a1 1 0 011.414 0z"
-                />
-              </svg>
-            </button>
-            <p
-              id="lesson-complete-feedback"
-              class="mt-2 text-xs font-medium text-emerald-700 hidden"
-            >
-              Lesson marked as complete. You can close this tab.
-            </p>
-          </section>
-
-          <section
-            class="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-900/5"
-          >
-            <h2 class="text-base font-semibold text-slate-900">
-              Quick Checklist
-            </h2>
-            <ul class="mt-4 space-y-3 text-sm text-slate-600">
-              <li class="flex gap-3">
-                <span
-                  class="mt-1 h-2.5 w-2.5 rounded-full bg-emerald-400"
-                ></span>
-                Draft three alternate opening sentences.
-              </li>
-              <li class="flex gap-3">
-                <span class="mt-1 h-2.5 w-2.5 rounded-full bg-amber-400"></span>
-                Share your intro with a writing partner for feedback.
-              </li>
-              <li class="flex gap-3">
-                <span class="mt-1 h-2.5 w-2.5 rounded-full bg-sky-500"></span>
-                Upload your final paragraph to the course forum.
-              </li>
-            </ul>
-          </section>
-
-          <section
-            class="rounded-xl bg-gradient-to-br from-sky-600 via-sky-500 to-sky-400 p-6 text-white shadow-sm"
-          >
-            <h2 class="text-base font-semibold">Need a Quick Win?</h2>
-            <p class="mt-2 text-sm text-white/85">
-              Complete the “Hook Your Reader” exercise and submit three elevator
-              pitches for instant peer feedback.
-            </p>
-            <button
-              class="mt-4 inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-sky-600 shadow-sm transition hover:bg-slate-100"
-            >
-              Open Exercise
-              <svg
-                class="h-4 w-4"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  d="M10.293 3.293a1 1 0 011.414 0l5 5a1 1 0 01-1.414 1.414L11 6.414V17a1 1 0 11-2 0V6.414L4.707 9.707A1 1 0 013.293 8.293l5-5z"
-                />
-              </svg>
-            </button>
           </section>
         </aside>
       </section>
@@ -314,130 +273,5 @@
         </div>
       </div>
     </footer>
-    <script type="module">
-      import { config } from "./sdk/config.js";
-      import { VitalStatsSDK } from "./sdk/init.js";
-
-      const button = document.getElementById("complete-lesson-button");
-      const feedback = document.getElementById("lesson-complete-feedback");
-      const label = button?.querySelector(".button-label");
-
-      if (button && label) {
-        const params = new URLSearchParams(window.location.search);
-        const lessonId = Number(params.get("lessonId"));
-        const enrolmentIdFromQuery = Number(params.get("enrolmentId"));
-        const fallbackEnrolment = Number(
-          window.opener?.enrolmentId ?? window.enrolmentId ?? 0
-        );
-        const enrolmentId = enrolmentIdFromQuery || fallbackEnrolment || 0;
-
-        if (enrolmentId) {
-          window.enrolmentId = enrolmentId;
-        }
-
-        if (!lessonId || !enrolmentId) {
-          label.textContent = "Lesson context unavailable";
-          button.dataset.state = "disabled";
-          button.disabled = true;
-          button.classList.remove("bg-emerald-600", "hover:bg-emerald-500");
-          button.classList.add(
-            "bg-slate-200",
-            "text-slate-500",
-            "cursor-not-allowed"
-          );
-        } else {
-          const { slug, apiKey } = config;
-          let completionModelPromise = null;
-
-          const getCompletionModel = async () => {
-            if (!completionModelPromise) {
-              const sdk = new VitalStatsSDK({ slug, apiKey });
-              completionModelPromise = sdk
-                .initialize()
-                .then((plugin) =>
-                  plugin.switchTo(
-                    "EduflowproOEnrolmentLessonCompLessonCompletion"
-                  )
-                )
-                .catch((error) => {
-                  completionModelPromise = null;
-                  throw error;
-                });
-            }
-            return completionModelPromise;
-          };
-
-          button.addEventListener("click", async () => {
-            const currentState = button.dataset.state;
-            if (currentState === "loading" || currentState === "completed")
-              return;
-
-            button.dataset.state = "loading";
-            label.textContent = "Marking...";
-            button.disabled = true;
-            button.classList.add("opacity-80", "cursor-wait");
-
-            if (feedback) {
-              feedback.classList.add("hidden");
-              feedback.classList.remove("text-rose-600");
-            }
-
-            try {
-              const completionModel = await getCompletionModel();
-              const mutation = completionModel.mutation();
-              mutation.createOne({
-                lesson_completion_id: lessonId,
-                enrolment_lesson_completion_id: enrolmentId,
-              });
-              await mutation.execute(true).toPromise();
-
-              label.textContent = "Lesson completed";
-              button.dataset.state = "completed";
-              button.classList.remove(
-                "bg-emerald-600",
-                "hover:bg-emerald-500",
-                "opacity-80",
-                "cursor-wait"
-              );
-              button.classList.add(
-                "bg-emerald-100",
-                "text-emerald-700",
-                "cursor-default"
-              );
-              if (feedback) {
-                feedback.textContent =
-                  "Lesson marked as complete. You can close this tab.";
-                feedback.classList.remove("hidden");
-              }
-
-              try {
-                window.opener?.postMessage(
-                  { type: "lesson-completed", lessonId, enrolmentId },
-                  "*"
-                );
-              } catch (postMessageError) {
-                console.warn(
-                  "Unable to notify opener window",
-                  postMessageError
-                );
-              }
-            } catch (error) {
-              console.error("Failed to mark lesson complete", error);
-              button.dataset.state = "idle";
-              button.disabled = false;
-              button.classList.remove("opacity-80", "cursor-wait");
-              button.classList.add("bg-emerald-600", "hover:bg-emerald-500");
-              label.textContent = "Complete this lesson";
-              if (feedback) {
-                feedback.textContent =
-                  "Something went wrong. Please try again.";
-                feedback.classList.remove("hidden");
-                feedback.classList.add("text-rose-600");
-              }
-            }
-          });
-        }
-      }
-    </script>
   </body>
 </html>

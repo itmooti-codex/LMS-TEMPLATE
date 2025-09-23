@@ -374,8 +374,6 @@ export class AWCModel {
       .deSelectAll()
       .where("id", id)
       .select(["last_lesson_id"]);
-    // query.getOrInitQueryCalc?.();
-    // query.field("last_lesson_id", "lastLessonId");
 
     const payload = await query
       .noDestroy()
@@ -387,7 +385,7 @@ export class AWCModel {
       ? payload.records
       : query.getAllRecordsArray?.() ?? [];
 
-    const value = records?.[0]?.lastLessonId ?? null;
+    const value = records?.[0]?.last_lesson_id ?? null;
     return value != null ? Number(value) : null;
   }
 
@@ -400,9 +398,6 @@ export class AWCModel {
       .deSelectAll()
       .where("contact_in_progress_id", id)
       .select([("id", "in_progress_lesson_id")]);
-    // query.getOrInitQueryCalc?.();
-    // query.field("id", "id");
-    // query.field("in_progress_lesson_id", "lessonId");
 
     const payload = await query
       .noDestroy()
@@ -431,9 +426,6 @@ export class AWCModel {
       .deSelectAll()
       .where("enrolment_lesson_completion_id", id)
       .select(["id", "lesson_completion_id"]);
-    // query.getOrInitQueryCalc?.();
-    // query.field("id", "id");
-    // query.field("lesson_completion_id", "lessonId");
 
     const payload = await query
       .noDestroy()

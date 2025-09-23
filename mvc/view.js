@@ -95,8 +95,9 @@ export class AWCView {
           const base =
             "lesson-launch inline-flex items-center gap-1 rounded-md px-3 py-1 text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2";
           if (state === "completed") {
-            return `${base} bg-slate-200 text-slate-500 cursor-default pointer-events-none`;
+            return `${base} bg-emerald-600 text-white hover:bg-emerald-500`; // same as "resume" state
           }
+
           if (state === "resume") {
             return `${base} bg-emerald-600 text-white hover:bg-emerald-500`;
           }
@@ -181,7 +182,7 @@ export class AWCView {
                     <span>{{:lesson_length}} min</span>
                   </span>
                   {{/if}}
-                  <a
+                 <a
                     data-lesson-action="launch"
                     data-lesson-id="{{:id}}"
                     data-module-id="{{:#parent.data.id}}"
@@ -189,14 +190,11 @@ export class AWCView {
                     data-lesson-status="{{:~lessonState(id, ~progress)}}"
                     class="{{:~lessonButtonClass(id, ~progress)}}"
                     href="{{:~lessonHref(id, ~progress)}}"
-                    {{if ~shouldOpenLesson(id, ~progress)}}target="_blank" rel="noopener"{{/if}}
-                    {{if ~lessonState(id, ~progress) === 'completed'}}aria-disabled="true"{{/if}}
                   >
                     <span>{{:~lessonButtonLabel(id, ~progress)}}</span>
-                    {{if ~lessonState(id, ~progress) !== 'completed'}}
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="#0ea5e9"><path d="M9.5 7l5 5-5 5"/></svg>
-                    {{/if}}
                   </a>
+
                 </div>
               </div>
             </div>
