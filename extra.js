@@ -128,7 +128,9 @@ if (button && label) {
     const query = completionModel
       .query()
       .deSelectAll()
-      .select(["Enrolment_Lesson_Completion_ID", "Lesson_Completion_ID"]);
+      .select(["Enrolment_Lesson_Completion_ID", "Lesson_Completion_ID"])
+      .where("enrolment_lesson_completion_id", Number(window.enrolmentId))
+      .andWhere("lesson_completion_id", Number(window.lessonId));
 
     const payload = await query
       .noDestroy()
@@ -137,28 +139,20 @@ if (button && label) {
       .toPromise();
 
     if (payload) {
-      const lesssonId = Object.values(payload)[0].lesson_completion_id;
-      const enrollmentId =
-        Object.values(payload)[0].enrolment_lesson_completion_id;
-
-      if (lesssonId == window.lessonId && enrollmentId == window.enrolmentId) {
-        if (button && label) {
-          label.textContent = "Lesson completed";
-          button.dataset.state = "completed";
-          button.disabled = true;
-          button.classList.remove(
-            "bg-emerald-600",
-            "hover:bg-emerald-500",
-            "opacity-80",
-            "cursor-wait"
-          );
-          button.classList.add(
-            "bg-emerald-100",
-            "text-emerald-700",
-            "cursor-default"
-          );
-        }
-      }
+      label.textContent = "Lesson completed";
+      button.dataset.state = "completed";
+      button.disabled = true;
+      button.classList.remove(
+        "bg-emerald-600",
+        "hover:bg-emerald-500",
+        "opacity-80",
+        "cursor-wait"
+      );
+      button.classList.add(
+        "bg-emerald-100",
+        "text-emerald-700",
+        "cursor-default"
+      );
     }
   } catch (err) {
     console.error("Failed to fetch completed lesson", err);
