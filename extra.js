@@ -137,8 +137,9 @@ if (button && label) {
       .toPromise();
 
     if (payload) {
-      const lesssonId = payload.lesson_completion_id;
-      const enrollmentId = payload.enrolment_lesson_completion_id;
+      const lesssonId = Object.values(payload)[0].lesson_completion_id;
+      const enrollmentId =
+        Object.values(payload)[0].enrolment_lesson_completion_id;
 
       if (lesssonId == window.lessonId && enrollmentId == window.enrolmentId) {
         if (button && label) {
