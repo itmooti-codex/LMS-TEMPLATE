@@ -126,11 +126,13 @@ if (button && label) {
     .deSelectAll()
     .select(["Enrolment_Lesson_Completion_ID", "Lesson_Completion_ID"])
     .where("Lesson_Completion_ID", Number(window.lessonId))
-    .andWhere("Enrolment_Lesson_Completion_ID", Number(window.lessonId));
+    .andWhere("Enrolment_Lesson_Completion_ID", Number(window.enrolmentId));
 
   const payload = await query
     .noDestroy()
     .fetch()
     .pipe(window.toMainInstance?.(true) ?? ((x) => x))
     .toPromise();
+
+  console.log(payload);
 })();
