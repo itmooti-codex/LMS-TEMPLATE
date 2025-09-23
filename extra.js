@@ -18,6 +18,10 @@ if (button && label) {
     window.enrolmentId = enrolmentId;
   }
 
+  if (lessonId) {
+    window.lessonId = lessonId;
+  }
+
   if (!lessonId || !enrolmentId) {
     label.textContent = "Lesson context unavailable";
     button.dataset.state = "disabled";
@@ -114,3 +118,19 @@ if (button && label) {
     });
   }
 }
+
+(async function fetchCompletedLesson() {
+  const completionModel = await getCompletionModel();
+  const query = completionModel
+    .query()
+    .deSelectAll()
+    .select(["Enrolment_Lesson_Completion_ID", "Lesson_Completion_ID"])
+    .where("Lesson_Completion_ID", Number(window.lessonId))
+    .andWhere("Enrolment_Lesson_Completion_ID", Number(window.lessonId));
+
+  const payload = await query
+    .noDestroy()
+    .fetch()
+    .pipe(window.toMainInstance?.(true) ?? ((x) => x))
+    .toPromise();
+})();
