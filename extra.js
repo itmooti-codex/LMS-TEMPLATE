@@ -124,9 +124,7 @@ if (button && label) {
   const query = completionModel
     .query()
     .deSelectAll()
-    .select(["Enrolment_Lesson_Completion_ID", "Lesson_Completion_ID"])
-    .where("Lesson_Completion_ID", Number(window.lessonId))
-    .andWhere("Enrolment_Lesson_Completion_ID", Number(window.enrolmentId));
+    .select(["Enrolment_Lesson_Completion_ID", "Lesson_Completion_ID"]);
 
   const payload = await query
     .noDestroy()
