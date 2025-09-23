@@ -5,6 +5,26 @@ const button = document.getElementById("complete-lesson-button");
 const feedback = document.getElementById("lesson-complete-feedback");
 const label = button?.querySelector(".button-label");
 
+// Keep completion model logic at module scope
+const { slug, apiKey } = config;
+let completionModelPromise = null;
+
+const getCompletionModel = async () => {
+  if (!completionModelPromise) {
+    const sdk = new VitalStatsSDK({ slug, apiKey });
+    completionModelPromise = sdk
+      .initialize()
+      .then((plugin) =>
+        plugin.switchTo("EduflowproOEnrolmentLessonCompLessonCompletion")
+      )
+      .catch((error) => {
+        completionModelPromise = null;
+        throw error;
+      });
+  }
+  return completionModelPromise;
+};
+
 if (button && label) {
   const params = new URLSearchParams(window.location.search);
   const lessonId = Number(params.get("lessonId"));
@@ -33,25 +53,6 @@ if (button && label) {
       "cursor-not-allowed"
     );
   } else {
-    const { slug, apiKey } = config;
-    let completionModelPromise = null;
-
-    const getCompletionModel = async () => {
-      if (!completionModelPromise) {
-        const sdk = new VitalStatsSDK({ slug, apiKey });
-        completionModelPromise = sdk
-          .initialize()
-          .then((plugin) =>
-            plugin.switchTo("EduflowproOEnrolmentLessonCompLessonCompletion")
-          )
-          .catch((error) => {
-            completionModelPromise = null;
-            throw error;
-          });
-      }
-      return completionModelPromise;
-    };
-
     button.addEventListener("click", async () => {
       const currentState = button.dataset.state;
       if (currentState === "loading" || currentState === "completed") return;
@@ -73,7 +74,7 @@ if (button && label) {
           Lesson_Completion_ID: lessonId,
           Enrolment_Lesson_Completion_ID: enrolmentId,
         });
-        let x = await mutation.execute(true).toPromise();
+        await mutation.execute(true).toPromise();
 
         label.textContent = "Lesson completed";
         button.dataset.state = "completed";
@@ -88,6 +89,7 @@ if (button && label) {
           "text-emerald-700",
           "cursor-default"
         );
+
         if (feedback) {
           feedback.textContent =
             "Lesson marked as complete. You can close this tab.";
@@ -119,18 +121,23 @@ if (button && label) {
   }
 }
 
+// Always runs regardless of button presence
 (async function fetchCompletedLesson() {
-  const completionModel = await getCompletionModel();
-  const query = completionModel
-    .query()
-    .deSelectAll()
-    .select(["Enrolment_Lesson_Completion_ID", "Lesson_Completion_ID"]);
+  try {
+    const completionModel = await getCompletionModel();
+    const query = completionModel
+      .query()
+      .deSelectAll()
+      .select(["Enrolment_Lesson_Completion_ID", "Lesson_Completion_ID"]);
 
-  const payload = await query
-    .noDestroy()
-    .fetch()
-    .pipe(window.toMainInstance?.(true) ?? ((x) => x))
-    .toPromise();
+    const payload = await query
+      .noDestroy()
+      .fetch()
+      .pipe(window.toMainInstance?.(true) ?? ((x) => x))
+      .toPromise();
 
-  console.log(payload);
+    console.log(payload);
+  } catch (err) {
+    console.error("Failed to fetch completed lesson", err);
+  }
 })();
