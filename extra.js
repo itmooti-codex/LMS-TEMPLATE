@@ -136,7 +136,29 @@ if (button && label) {
       .pipe(window.toMainInstance?.(true) ?? ((x) => x))
       .toPromise();
 
-    console.log(payload);
+    if (payload) {
+      const lesssonId = payload.lesson_completion_id;
+      const enrollmentId = payload.enrolment_lesson_completion_id;
+
+      if (lesssonId == window.lessonId && enrollmentId == window.enrolmentId) {
+        if (button && label) {
+          label.textContent = "Lesson completed";
+          button.dataset.state = "completed";
+          button.disabled = true;
+          button.classList.remove(
+            "bg-emerald-600",
+            "hover:bg-emerald-500",
+            "opacity-80",
+            "cursor-wait"
+          );
+          button.classList.add(
+            "bg-emerald-100",
+            "text-emerald-700",
+            "cursor-default"
+          );
+        }
+      }
+    }
   } catch (err) {
     console.error("Failed to fetch completed lesson", err);
   }
