@@ -121,8 +121,8 @@ if (button && label) {
       .query()
       .deSelectAll()
       .select(["Enrolment_Lesson_Completion_ID", "Lesson_Completion_ID"])
-      .where("Enrolment_Lesson_Completion_ID", Number(window.enrolmentId))
-      .andWhere("Lesson_Completion_ID", Number(window.lessonId));
+      .where("enrolment_lesson_completion_id", Number(window.enrolmentId))
+      .andWhere("lesson_completion_id", Number(window.lessonId));
 
     const payload = await query
       .noDestroy()
