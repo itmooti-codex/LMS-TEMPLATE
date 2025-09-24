@@ -304,33 +304,38 @@
         id="chat-section"
         class="section max-w-6xl mx-auto px-4 sm:px-6 py-8 hidden"
       >
-        <!-- Chat filters: All/My posts -->
-        <div
-          id="allAnnouncementsContainer"
-          class="mb-3 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between"
-        >
+        <h2 class="text-xl font-semibold tracking-tight mb-4 text-slate-900">
+          Course Chat
+        </h2>
+        <div class="bg-white border rounded-xl p-6 shadow-sm card-hover">
+          <!-- Chat filters: All/My posts -->
           <div
-            class="flex flex-wrap items-center justify-center gap-2 sm:justify-start"
+            id="allAnnouncementsContainer"
+            class="mb-4 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between"
           >
             <div
-              id="all-posts-tab"
-              class="cursor-pointer px-3 py-2 rounded-md text-sm font-semibold text-slate-700 hover:text-sky-700 hover:bg-sky-50"
+              class="flex flex-wrap items-center justify-center gap-2 sm:justify-start"
             >
-              All Posts
-            </div>
-            <div
-              id="my-posts-tab"
-              class="cursor-pointer px-3 py-2 rounded-md text-sm font-semibold text-slate-700 hover:text-sky-700 hover:bg-sky-50"
-            >
-              My Posts
+              <div
+                id="all-posts-tab"
+                class="cursor-pointer px-3 py-2 rounded-md text-sm font-semibold text-slate-700 hover:text-sky-700 hover:bg-sky-50"
+              >
+                All Posts
+              </div>
+              <div
+                id="my-posts-tab"
+                class="cursor-pointer px-3 py-2 rounded-md text-sm font-semibold text-slate-700 hover:text-sky-700 hover:bg-sky-50"
+              >
+                My Posts
+              </div>
             </div>
           </div>
-        </div>
-        <div class="posts-input" id="create-post-section">
-          <div class="containerForToolbar">
-            <div
-              class="flex flex-wrap items-center gap-2 bg-white border border-gray-300 rounded p-2 shadow"
-            >
+
+          <div class="posts-input" id="create-post-section">
+            <div class="containerForToolbar">
+              <div
+                class="inline-flex flex-wrap items-center gap-2 bg-white border border-slate-300 rounded-lg px-2 py-1"
+              >
               <button class="px-2 py-1 rounded hover:bg-gray-200" title="Bold">
                 𝐁
               </button>
@@ -352,30 +357,30 @@
               >
                 🔗
               </button>
+              </div>
             </div>
-          </div>
-          <section class="createPost">
-            <div class="post-input">
-              <div
-                contenteditable="true"
-                rows="2"
-                id="post-data"
-                placeholder="Post your thoughts...Type @Name to mention people"
-              ></div>
-            </div>
-            <div class="commentFilePreviewContainer mt-2"></div>
-            <div class="create-post-buttons">
-              <input
-                id="postFile"
-                name="postFile"
-                type="file"
-                class="sr-only"
-              />
-              <label
-                for="postFile"
-                data-action="replace-button"
-                class="create-post-buttons attach-file inline-flex items-center gap-2 cursor-pointer border rounded px-3 py-2 !hidden"
-              >
+            <section class="createPost text-slate-800">
+              <div class="post-input">
+                <div
+                  contenteditable="true"
+                  rows="2"
+                  id="post-data"
+                  placeholder="Post your thoughts...Type @Name to mention people"
+                ></div>
+              </div>
+              <div class="commentFilePreviewContainer mt-2"></div>
+              <div class="create-post-buttons">
+                <input
+                  id="postFile"
+                  name="postFile"
+                  type="file"
+                  class="sr-only"
+                />
+                <label
+                  for="postFile"
+                  data-action="replace-button"
+                  class="create-post-buttons attach-file inline-flex items-center gap-2 cursor-pointer border rounded px-3 py-2 !hidden"
+                >
                 <svg
                   width="12"
                   height="12"
@@ -415,11 +420,11 @@
                 type="file"
                 class="sr-only"
               />
-              <label
-                data-action="attach-file"
-                for="postFile"
-                class="create-post-buttons attach-file inline-flex items-center gap-2 cursor-pointer border rounded px-3 py-2"
-              >
+                <label
+                  data-action="attach-file"
+                  for="postFile"
+                  class="create-post-buttons attach-file inline-flex items-center gap-2 cursor-pointer border rounded px-3 py-2"
+                >
                 <svg
                   width="12"
                   height="12"
@@ -449,11 +454,12 @@
                     fill="white"
                   ></path>
                 </svg>
-              </button>
-            </div>
-          </section>
+                </button>
+              </div>
+            </section>
+          </div>
+          <section id="renderForms"></section>
         </div>
-        <section id="renderForms"></section>
       </div>
 
       <div

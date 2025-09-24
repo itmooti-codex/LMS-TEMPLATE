@@ -1,0 +1,413 @@
+<div class="bg-sky-50 text-slate-800">
+  <!-- Hero -->
+  <header
+          class="bg-gradient-to-br from-sky-700 via-sky-600 to-sky-500 text-white"
+          >
+    <div
+         class="max-w-6xl mx-auto px-4 sm:px-6 py-10 flex flex-col items-center gap-8 md:flex-row md:items-start"
+         >
+      <div class="flex-1 text-center md:text-left">
+        <div
+             class="inline-flex items-center gap-2 bg-white/15 border border-white/20 text-white rounded-full px-3 py-1 text-xs mb-4"
+             >
+          <span class="w-2 h-2 rounded-full bg-emerald-300"></span>
+          Tutor-led • 12 months access
+        </div>
+        <h1
+            id="course-title"
+            data-default-title="TEST COURSE 2"
+            class="text-3xl font-semibold tracking-tight"
+            >
+          [Page//Class//Course//Course Name]
+        </h1>
+        <p class="text-white/90 mt-1">
+          [Page//Class//Course//Description]
+        </p>
+
+        <div
+             class="mt-6 flex w-full flex-col items-center gap-4 sm:flex-row sm:justify-center md:w-auto md:items-start md:justify-start"
+             >
+          <button
+                  id="course-resume-button"
+                  type="button"
+                  class="flex w-full items-center justify-center gap-2 rounded-lg bg-white px-5 py-2 font-semibold text-sky-700 shadow-sm transition hover:bg-slate-100 sm:w-auto"
+                  data-state="start"
+                  >
+            <span id="course-resume-label">Start</span>
+            <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M6 4l8 6-8 6V4z" />
+            </svg>
+          </button>
+          <div
+               id="resume-details"
+               class="leading-snug text-center sm:text-left hidden"
+               >
+            <p class="text-emerald-200/95 font-medium" id="resume-headline">
+              Resume to
+            </p>
+            <p class="text-white/95" id="resume-description">
+              <span class="font-semibold" id="resume-lesson-name"></span>
+              <span
+                    class="block text-white/85 sm:inline sm:ml-1"
+                    id="resume-module-name"
+                    ></span>
+            </p>
+          </div>
+        </div>
+        <div class="hidden md:flex md:w-32 md:justify-end">
+          <img
+               src=""
+               alt=""
+               class="h-16 drop-shadow"
+               />
+        </div>
+      </div>
+      </header>
+
+    <!-- Sticky Tabs -->
+    <nav
+         class="bg-white/80 backdrop-blur supports-[backdrop-filter]:sticky sticky top-0 border-b"
+         >
+      <div class="max-w-6xl mx-auto px-4 sm:px-6">
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
+          <a
+             href="#"
+             data-target="overview-section"
+             class="group px-4 py-3 text-sm font-medium text-slate-600 hover:text-sky-700 relative text-sky-600 font-semibold"
+             >
+            <span class="inline-flex items-center gap-2">
+              <svg
+                   class="w-6 h-6"
+                   viewBox="0 0 24 24"
+                   fill="currentColor"
+                   aria-hidden="true"
+                   >
+                <path
+                      d="M6 3.5A2.5 2.5 0 0 0 3.5 6v12A2.5 2.5 0 0 0 6 20.5h12A2.5 2.5 0 0 0 20.5 18V8.914A2.5 2.5 0 0 0 19.768 7.232l-3-3A2.5 2.5 0 0 0 15.086 3.5H6Zm9 .75c.332 0 .65.132.884.366l3.5 3.5c.234.234.366.552.366.884H15.75a.75.75 0 0 1-.75-.75V4.25ZM7 9.25a.75.75 0 0 1 .75-.75h6.5a.75.75 0 0 1 0 1.5h-6.5A.75.75 0 0 1 7 9.25ZM7 12.75a.75.75 0 0 1 .75-.75h9.5a.75.75 0 0 1 0 1.5h-9.5a.75.75 0 0 1-.75-.75ZM7.75 15.5a.75.75 0 0 0 0 1.5h9.5a.75.75 0 0 0 0-1.5h-9.5Z"
+                      />
+              </svg>
+              <span class="hidden md:inline">Overview</span>
+            </span>
+            <span
+                  class="absolute left-4 right-4 -bottom-px h-0.5 bg-sky-600 scale-x-0 group-hover:scale-x-100 transition-transform"
+                  aria-hidden="true"
+                  ></span>
+          </a>
+          <a
+             href="#"
+             data-target="content-section"
+             class="group px-4 py-3 text-sm font-medium text-slate-600 hover:text-sky-700 relative"
+             >
+            <span class="inline-flex items-center gap-2">
+              <svg
+                   class="w-6 h-6"
+                   viewBox="0 0 24 24"
+                   fill="currentColor"
+                   aria-hidden="true"
+                   >
+                <path
+                      d="M4.75 5A1.75 1.75 0 0 1 6.5 3.25h9A2.75 2.75 0 0 1 18.25 6v11.25a.75.75 0 0 1-1.2.6l-2.55-1.913a2.75 2.75 0 0 0-1.65-.537H6.5A1.75 1.75 0 0 1 4.75 13.65V5Zm1.75-.25a.25.25 0 0 0-.25.25v8.65c0 .138.112.25.25.25h6.35c.602 0 1.187.2 1.667.566l1.233.924V6A1.25 1.25 0 0 0 15.5 4.75h-9Z"
+                      />
+              </svg>
+              <span class="hidden md:inline">Course Content</span>
+            </span>
+            <span
+                  class="absolute left-4 right-4 -bottom-px h-0.5 bg-sky-600 scale-x-0 group-hover:scale-x-100 transition-transform"
+                  ></span>
+          </a>
+          <a
+             href="#"
+             data-target="chat-section"
+             class="group px-4 py-3 text-sm font-medium text-slate-600 hover:text-sky-700 relative"
+             >
+            <span class="inline-flex items-center gap-2">
+              <svg
+                   xmlns="http://www.w3.org/2000/svg"
+                   fill="none"
+                   viewBox="0 0 24 24"
+                   stroke="currentColor"
+                   class="w-6 h-6"
+                   >
+                <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8-1.845 0-3.558-.502-4.97-1.356L3 20l1.356-4.97C3.502 14.558 3 12.845 3 11c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                      />
+              </svg>
+
+              <span class="hidden md:inline">Course Chat</span>
+            </span>
+            <span
+                  class="absolute left-4 right-4 -bottom-px h-0.5 bg-sky-600 scale-x-0 group-hover:scale-x-100 transition-transform"
+                  ></span>
+          </a>
+          <a
+             href="#"
+             data-target="announcements-section"
+             class="group px-4 py-3 text-sm font-medium text-slate-600 hover:text-sky-700 relative"
+             >
+            <span class="inline-flex items-center gap-2">
+              <svg
+                   xmlns="http://www.w3.org/2000/svg"
+                   fill="none"
+                   viewBox="0 0 24 24"
+                   stroke="currentColor"
+                   class="w-6 h-6"
+                   >
+                <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                      />
+              </svg>
+
+              <span class="hidden md:inline">Announcements</span>
+            </span>
+            <span
+                  class="absolute left-4 right-4 -bottom-px h-0.5 bg-sky-600 scale-x-0 group-hover:scale-x-100 transition-transform"
+                  ></span>
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div id="main-content">
+      <div
+           id="overview-section"
+           class="section max-w-6xl mx-auto px-4 sm:px-6 py-10"
+           >
+        <div class="grid md:grid-cols-3 gap-8 items-start">
+          <div class="md:col-span-2">
+            <h2
+                class="text-xl font-semibold tracking-tight mb-3 text-slate-900"
+                >
+              The blueprint for your children’s book
+            </h2>
+            <p class="text-slate-700 mb-4 text-sm">
+              You’ll discover how to write memorable stories for middle-grade
+              readers. That’s generally readers between eight to thirteen years
+              old.
+            </p>
+            <p class="text-slate-700 mb-6 text-sm">
+              Books in this age group are very popular and have seen a surge in
+              popularity in recent years. It’s an age when young readers are
+              curious, they love to learn and they enjoy reading about younger
+              protagonists they can relate to. It’s also an age where you can
+              start exploring more complex topics, take your characters on epic
+              adventures and have fun with humour.
+            </p>
+
+            <div class="mt-4 text-sm">
+              <a
+                 href="#"
+                 data-target="content-section"
+                 class="btn-pill bg-sky-700 text-white hover:filter hover:brightness-95"
+                 >
+                Go to Course Content
+                <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M6 4l8 6-8 6V4z" />
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- Discovery Box as a side card -->
+          <aside class="bg-white border rounded-xl p-6 shadow-sm card-hover">
+            <div
+                 class="flex items-center gap-2 text-sky-700 font-semibold mb-3"
+                 >
+              <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10 2l7 4v8l-7 4-7-4V6l7-4z" />
+              </svg>
+              You'll discover
+            </div>
+            <div class="grid grid-cols-1 gap-3 text-slate-700 text-sm">
+              <ul class="space-y-2 list-none">
+                <li>
+                  ☑ What you need to know about writing for 8–13 year olds.
+                </li>
+                <li>☑ How to find the right voice.</li>
+                <li>
+                  ☑ Tips for young readers — and avoiding common mistakes.
+                </li>
+              </ul>
+              <ul class="space-y-2 list-none">
+                <li>☑ How writing for children differs from adults.</li>
+                <li>☑ Creating characters and stories young readers enjoy.</li>
+                <li>☑ How to structure a story that works.</li>
+              </ul>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <div
+           id="content-section"
+           class="max-w-6xl mx-auto px-4 sm:px-6 py-8 hidden"
+           ></div>
+
+      <div
+           id="chat-section"
+           class="section max-w-6xl mx-auto px-4 sm:px-6 py-8 hidden"
+           >
+        <!-- Chat filters: All/My posts -->
+        <div
+             id="allAnnouncementsContainer"
+             class="mb-3 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between"
+             >
+          <div
+               class="flex flex-wrap items-center justify-center gap-2 sm:justify-start"
+               >
+            <div
+                 id="all-posts-tab"
+                 class="cursor-pointer px-3 py-2 rounded-md text-sm font-semibold text-slate-700 hover:text-sky-700 hover:bg-sky-50"
+                 >
+              All Posts
+            </div>
+            <div
+                 id="my-posts-tab"
+                 class="cursor-pointer px-3 py-2 rounded-md text-sm font-semibold text-slate-700 hover:text-sky-700 hover:bg-sky-50"
+                 >
+              My Posts
+            </div>
+          </div>
+        </div>
+        <div class="posts-input" id="create-post-section">
+          <div class="containerForToolbar">
+            <div
+                 class="flex flex-wrap items-center gap-2 bg-white border border-gray-300 rounded p-2 shadow"
+                 >
+              <button class="px-2 py-1 rounded hover:bg-gray-200" title="Bold">
+                𝐁
+              </button>
+              <button
+                      class="px-2 py-1 rounded hover:bg-gray-200"
+                      title="Italic"
+                      >
+                𝐼
+              </button>
+              <button
+                      class="px-2 py-1 rounded hover:bg-gray-200"
+                      title="Underline"
+                      >
+                U̲
+              </button>
+              <button
+                      class="px-2 py-1 rounded hover:bg-gray-200"
+                      title="Add Link"
+                      >
+                🔗
+              </button>
+            </div>
+          </div>
+          <section class="createPost">
+            <div class="post-input">
+              <div
+                   contenteditable="true"
+                   rows="2"
+                   id="post-data"
+                   placeholder="Post your thoughts...Type @Name to mention people"
+                   ></div>
+            </div>
+            <div class="commentFilePreviewContainer mt-2"></div>
+            <div class="create-post-buttons">
+              <input
+                     id="postFile"
+                     name="postFile"
+                     type="file"
+                     class="sr-only"
+                     />
+              <label
+                     for="postFile"
+                     data-action="replace-button"
+                     class="create-post-buttons attach-file inline-flex items-center gap-2 cursor-pointer border rounded px-3 py-2 !hidden"
+                     >
+                <svg
+                     width="12"
+                     height="12"
+                     viewBox="0 0 12 12"
+                     fill="none"
+                     xmlns="http://www.w3.org/2000/svg"
+                     >
+                  <path
+                        d="M3.91667 4.64897H1.41667C1.30616 4.64897 1.20018 4.60508 1.12204 4.52694C1.0439 4.4488 1 4.34281 1 4.23231V1.73231C0.999935 1.64985 1.02434 1.56923 1.07012 1.50065C1.1159 1.43207 1.18099 1.37861 1.25717 1.34705C1.33335 1.31549 1.41718 1.30723 1.49804 1.32334C1.57891 1.33944 1.65319 1.37918 1.71146 1.43752L2.66667 2.39377C3.58969 1.50296 4.8214 1.00356 6.10417 1.00002H6.13177C7.43806 0.996651 8.69309 1.50806 9.625 2.42345C9.70109 2.5013 9.7437 2.60583 9.7437 2.71469C9.74371 2.82354 9.70111 2.92808 9.62503 3.00593C9.54895 3.08378 9.44542 3.12877 9.33659 3.13126C9.22776 3.13376 9.12228 3.09357 9.04271 3.01929C8.26593 2.25683 7.22022 1.8308 6.13177 1.83335H6.10833C5.04593 1.83636 4.02534 2.24772 3.25781 2.98231L4.21146 3.93752C4.2698 3.99579 4.30953 4.07006 4.32564 4.15093C4.34174 4.2318 4.33349 4.31563 4.30193 4.3918C4.27036 4.46798 4.21691 4.53308 4.14833 4.57886C4.07974 4.62464 3.99912 4.64904 3.91667 4.64897ZM10.5833 7.14897H8.08333C8.00088 7.14891 7.92025 7.17331 7.85167 7.21909C7.78309 7.26487 7.72964 7.32997 7.69807 7.40615C7.66651 7.48232 7.65826 7.56615 7.67436 7.64702C7.69047 7.72789 7.7302 7.80216 7.78854 7.86043L8.74219 8.81564C7.97503 9.55067 6.95463 9.9626 5.89219 9.96616H5.86875C4.7803 9.96871 3.73459 9.54268 2.95781 8.78022C2.919 8.74052 2.87265 8.70897 2.82148 8.68744C2.77031 8.6659 2.71535 8.65481 2.65983 8.65481C2.60431 8.65481 2.54935 8.66591 2.49818 8.68746C2.44701 8.709 2.40066 8.74055 2.36185 8.78026C2.32305 8.81996 2.29257 8.86702 2.27221 8.91868C2.25185 8.97033 2.24202 9.02553 2.24329 9.08103C2.24457 9.13654 2.25692 9.19123 2.27963 9.24189C2.30233 9.29256 2.33494 9.33817 2.37552 9.37606C3.30743 10.2915 4.56246 10.8029 5.86875 10.7995H5.89583C7.1786 10.796 8.41031 10.2966 9.33333 9.40574L10.2896 10.362C10.348 10.4201 10.4223 10.4595 10.5032 10.4754C10.584 10.4912 10.6677 10.4828 10.7437 10.451C10.8198 10.4193 10.8847 10.3658 10.9303 10.2972C10.9759 10.2286 11.0002 10.148 11 10.0656V7.56564C11 7.45513 10.9561 7.34915 10.878 7.27101C10.7998 7.19287 10.6938 7.14897 10.5833 7.14897Z"
+                        fill="#007C8F"
+                        ></path>
+                </svg>
+                <span>Replace</span>
+              </label>
+              <button
+                      data-action="delete-button"
+                      class="create-post-buttons attach-file inline-flex items-center gap-2 cursor-pointer border rounded px-3 py-2 !hidden"
+                      >
+                <svg
+                     width="12"
+                     height="12"
+                     viewBox="0 0 12 12"
+                     fill="none"
+                     xmlns="http://www.w3.org/2000/svg"
+                     >
+                  <path
+                        d="M10.3462 2.53846H8.42308V2.15385C8.42308 1.84783 8.30151 1.55434 8.08512 1.33795C7.86874 1.12157 7.57525 1 7.26923 1H4.96154C4.65552 1 4.36203 1.12157 4.14565 1.33795C3.92926 1.55434 3.80769 1.84783 3.80769 2.15385V2.53846H1.88462C1.78261 2.53846 1.68478 2.57898 1.61265 2.65111C1.54052 2.72324 1.5 2.82107 1.5 2.92308C1.5 3.02508 1.54052 3.12291 1.61265 3.19504C1.68478 3.26717 1.78261 3.30769 1.88462 3.30769H2.26923V10.2308C2.26923 10.4348 2.35027 10.6304 2.49453 10.7747C2.63879 10.919 2.83445 11 3.03846 11H9.19231C9.39632 11 9.59198 10.919 9.73624 10.7747C9.8805 10.6304 9.96154 10.4348 9.96154 10.2308V3.30769H10.3462C10.4482 3.30769 10.546 3.26717 10.6181 3.19504C10.6902 3.12291 10.7308 3.02508 10.7308 2.92308C10.7308 2.82107 10.6902 2.72324 10.6181 2.65111C10.546 2.57898 10.4482 2.53846 10.3462 2.53846ZM4.57692 2.15385C4.57692 2.05184 4.61744 1.95401 4.68957 1.88188C4.7617 1.80975 4.85953 1.76923 4.96154 1.76923H7.26923C7.37124 1.76923 7.46907 1.80975 7.5412 1.88188C7.61332 1.95401 7.65385 2.05184 7.65385 2.15385V2.53846H4.57692V2.15385ZM9.19231 10.2308H3.03846V3.30769H9.19231V10.2308ZM5.34615 5.23077V8.30769C5.34615 8.4097 5.30563 8.50753 5.2335 8.57966C5.16137 8.65179 5.06354 8.69231 4.96154 8.69231C4.85953 8.69231 4.7617 8.65179 4.68957 8.57966C4.61744 8.50753 4.57692 8.4097 4.57692 8.30769V5.23077C4.57692 5.12876 4.61744 5.03093 4.68957 4.95881C4.7617 4.88668 4.85953 4.84615 4.96154 4.84615C5.06354 4.84615 5.16137 4.88668 5.2335 4.95881C5.30563 5.03093 5.34615 5.12876 5.34615 5.23077ZM7.65385 5.23077V8.30769C7.65385 8.4097 7.61332 8.50753 7.5412 8.57966C7.46907 8.65179 7.37124 8.69231 7.26923 8.69231C7.16722 8.69231 7.0694 8.65179 6.99727 8.57966C6.92514 8.50753 6.88462 8.4097 6.88462 8.30769V5.23077C6.88462 5.12876 6.92514 5.03093 6.99727 4.95881C7.0694 4.88668 7.16722 4.84615 7.26923 4.84615C7.37124 4.84615 7.46907 4.88668 7.5412 4.95881C7.61332 5.03093 7.65385 5.12876 7.65385 5.23077Z"
+                        fill="#007C8F"
+                        ></path>
+                </svg>
+                <span>Delete</span>
+              </button>
+
+              <input
+                     id="postFile"
+                     name="postFile"
+                     type="file"
+                     class="sr-only"
+                     />
+              <label
+                     data-action="attach-file"
+                     for="postFile"
+                     class="create-post-buttons attach-file inline-flex items-center gap-2 cursor-pointer border rounded px-3 py-2"
+                     >
+                <svg
+                     width="12"
+                     height="12"
+                     viewBox="0 0 12 12"
+                     fill="none"
+                     xmlns="http://www.w3.org/2000/svg"
+                     >
+                  <path
+                        d="M10.0385 5.72657C10.0743 5.76228 10.1026 5.80468 10.122 5.85136C10.1413 5.89804 10.1513 5.94807 10.1513 5.9986C10.1513 6.04913 10.1413 6.09916 10.122 6.14584C10.1026 6.19252 10.0743 6.23492 10.0385 6.27063L6.09504 10.2117C5.5902 10.7165 4.90551 11 4.19161 11C3.47771 11 2.79306 10.7163 2.28828 10.2115C1.78351 9.70664 1.49995 9.02195 1.5 8.30805C1.50005 7.59415 1.78369 6.9095 2.28852 6.40472L7.05916 1.56392C7.41958 1.20312 7.90856 1.00027 8.41854 1C8.92851 0.99973 9.41771 1.20206 9.77851 1.56247C10.1393 1.92289 10.3422 2.41187 10.3424 2.92185C10.3427 3.43183 10.1404 3.92102 9.77995 4.28182L5.00835 9.12263C4.79166 9.33933 4.49775 9.46107 4.1913 9.46107C3.88484 9.46107 3.59094 9.33933 3.37425 9.12263C3.15755 8.90593 3.03581 8.61203 3.03581 8.30558C3.03581 7.99912 3.15755 7.70522 3.37425 7.48852L7.37781 3.42151C7.41288 3.3841 7.45508 3.35408 7.50193 3.33322C7.54878 3.31236 7.59932 3.30109 7.65059 3.30005C7.70186 3.29902 7.75282 3.30826 7.80047 3.32721C7.84811 3.34617 7.89149 3.37447 7.92804 3.41044C7.96458 3.44641 7.99357 3.48933 8.01328 3.53667C8.03299 3.58401 8.04304 3.63481 8.04282 3.68609C8.04261 3.73737 8.03213 3.78809 8.01202 3.83526C7.99191 3.88243 7.96257 3.92511 7.92572 3.96077L3.92167 8.0321C3.88582 8.06767 3.85733 8.10995 3.83782 8.15653C3.81831 8.2031 3.80816 8.25307 3.80796 8.30357C3.80776 8.35406 3.81751 8.40411 3.83665 8.45084C3.85579 8.49757 3.88394 8.54008 3.91951 8.57593C3.95507 8.61178 3.99735 8.64027 4.04393 8.65978C4.09051 8.67929 4.14047 8.68944 4.19097 8.68964C4.24147 8.68984 4.29151 8.68009 4.33825 8.66095C4.38498 8.64181 4.42748 8.61365 4.46333 8.57809L9.23445 3.73968C9.45114 3.52343 9.57306 3.22996 9.57338 2.92382C9.57369 2.61768 9.45238 2.32395 9.23613 2.10726C9.01988 1.89056 8.7264 1.76865 8.42026 1.76833C8.11413 1.76801 7.8204 1.88933 7.6037 2.10558L2.83403 6.94446C2.65535 7.12286 2.51355 7.3347 2.41674 7.5679C2.31993 7.80109 2.27 8.05107 2.2698 8.30357C2.2696 8.55606 2.31913 8.80612 2.41557 9.03947C2.51201 9.27282 2.65347 9.48489 2.83187 9.66357C3.01026 9.84225 3.22211 9.98404 3.4553 10.0809C3.6885 10.1777 3.93848 10.2276 4.19097 10.2278C4.44346 10.228 4.69352 10.1785 4.92687 10.082C5.16022 9.98559 5.37229 9.84413 5.55097 9.66573L9.49494 5.72465C9.5673 5.65285 9.6652 5.61272 9.76713 5.61308C9.86906 5.61344 9.96668 5.65426 10.0385 5.72657Z"
+                        fill="#007C8F"
+                        ></path>
+                </svg>
+                <span>Attach a File</span>
+              </label>
+
+              <button class="post" id="post-button">
+                <span>Post</span>
+                <svg
+                     width="12"
+                     height="12"
+                     viewBox="0 0 12 12"
+                     fill="none"
+                     xmlns="http://www.w3.org/2000/svg"
+                     >
+                  <path
+                        d="M10.4282 5.99409C10.4285 6.12138 10.3948 6.24645 10.3306 6.35635C10.2664 6.46625 10.174 6.55701 10.0629 6.61922L2.56502 10.9062C2.45742 10.9672 2.33595 10.9995 2.21227 11C2.09832 10.9994 1.98616 10.9715 1.88517 10.9187C1.78417 10.8659 1.69727 10.7898 1.63172 10.6965C1.56617 10.6033 1.52386 10.4958 1.50834 10.3829C1.49282 10.27 1.50453 10.155 1.54249 10.0476L2.74809 6.47767C2.75987 6.44277 2.78216 6.41236 2.8119 6.39062C2.84163 6.36888 2.87736 6.35686 2.9142 6.35622H6.14162C6.19059 6.35633 6.23906 6.34636 6.28402 6.32695C6.32898 6.30754 6.36946 6.27909 6.40296 6.24337C6.43646 6.20765 6.46226 6.16543 6.47875 6.11932C6.49525 6.07321 6.50208 6.0242 6.49884 5.97534C6.49074 5.88348 6.44824 5.79808 6.37985 5.73623C6.31145 5.67438 6.22222 5.64065 6.13002 5.64179H2.91509C2.87772 5.64179 2.84129 5.63008 2.81094 5.60829C2.78058 5.5865 2.75782 5.55574 2.74586 5.52034L1.54026 1.95088C1.49228 1.81406 1.48705 1.66588 1.52529 1.52603C1.56352 1.38617 1.6434 1.26126 1.75432 1.16789C1.86524 1.07451 2.00194 1.01709 2.14626 1.00326C2.29059 0.989426 2.43571 1.01983 2.56234 1.09044L10.0638 5.37209C10.1743 5.43416 10.2662 5.52447 10.3302 5.63377C10.3942 5.74307 10.4281 5.86742 10.4282 5.99409Z"
+                        fill="white"
+                        ></path>
+                </svg>
+              </button>
+            </div>
+          </section>
+        </div>
+        <section id="renderForms"></section>
+      </div>
+
+      <div
+           id="announcements-section"
+           class="section max-w-6xl mx-auto px-4 sm:px-6 py-8 hidden"
+           ></div>
+   		 </div>
+    </div>
