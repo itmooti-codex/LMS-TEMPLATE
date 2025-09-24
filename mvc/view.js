@@ -1,27 +1,48 @@
+import { uploadAndGetFileLink } from "../utils/upload.js";
 export class AWCView {
   constructor({ mountId, modalRootId, postTextareaId, postButtonId, model }) {
-    this.mount = document.getElementById(mountId);
+    this.mount = [
+      document.getElementById(mountId),
+      document.getElementById("announcements-section"),
+    ];
+    this.forumtSectionMount = document.getElementById(mountId);
+    this.announcementMountSection = document.getElementById(
+      "announcements-section"
+    );
     this.modalRootId = modalRootId;
     this.postTextarea = document.getElementById(postTextareaId);
     this.postButton = document.getElementById(postButtonId);
-    this.templateName = "PostTemplate";
-    this.contentTemplateName = "ContentModulesTemplate";
-    this.announcementTemplateName = "AnnouncementTemplate";
+    this.chatTemplateName = "PostTemplate";
+    this.contentTemplateName = "ContentTemplate";
+    this.announceTemplateName = "AnnouncementTemplate";
     this.model = model;
     this.__activePreviewURLs = new WeakMap();
+    this.lessonActionHandler = null;
+    this.bannerActionHandler = null;
+    this.bannerButton = document.getElementById("course-resume-button");
+    this.bannerClickHandler = null;
+    this.progressState = {
+      enrolmentId: Number(window.enrolmentId ?? 1),
+      lastLessonId: null,
+      inProgressLessonIds: [],
+      completedLessonIds: [],
+      lessonUrlMap: {},
+    };
+    this.lessonTemplateRegistered = false;
     this.init();
   }
 
   init() {
-    this.ensureTemplate();
-    this.ensureContentTemplate();
-    this.ensureAnnouncementTemplate();
+    this.createForumTemplate();
+    // this.createContentTemplate();
     this.autoResizePostTextarea();
-    this.mount.addEventListener("click", (e) => {
-      const t = e.target.closest(".actionToggleButton");
-      if (!t) return;
-      const w = t.querySelector(".actionItemsWrapper");
-      if (w) w.classList.toggle("hidden");
+    this.mount.forEach((item) => {
+      item.addEventListener("click", (e) => {
+        const t = e.target.closest(".actionToggleButton");
+        if (!t) return;
+        const w = t.querySelector(".actionItemsWrapper");
+        if (w) w.classList.toggle("hidden");
+      });
     });
     this.getCommentValueObj();
     this.getReplyValueObj();
@@ -29,374 +50,315 @@ export class AWCView {
     this.attachFileBtnHandler();
     this.deleteAttachFileHandler();
     this.implementToolbarEffect();
+    this.setupBannerButton();
   }
 
-  ensureAnnouncementTemplate() {
-    if ($.templates[this.announcementTemplateName]) return;
-    const tmpl = `
-      <article class="bg-white rounded-lg shadow-sm ring-1 ring-slate-200 p-4 md:p-5">
-        <header class="flex items-start justify-between gap-4">
-          <div class="min-w-0">
-            <h3 class="text-lg md:text-xl font-semibold text-slate-800 truncate">{{:title}}</h3>
-            <div class="mt-1 flex items-center gap-3 text-slate-500 text-sm">
-              <span class="inline-flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 2A1.5 1.5 0 0 0 5 3.5V4H4a2 2 0 0 0-2 2v13a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3V6a2 2 0 0 0-2-2h-1v-.5A1.5 1.5 0 0 0 17.5 2 1.5 1.5 0 0 0 16 3.5V4H8v-.5A1.5 1.5 0 0 0 6.5 2zM20 9H4v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1z"/></svg>
-                <span>{{:date}}</span>
-              </span>
-              <span class="inline-flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 1 0 7 7 7.008 7.008 0 0 0-7-7Zm.75 7.438V6.5a.75.75 0 0 0-1.5 0v3.25a.75.75 0 0 0 .22.53l2.25 2.25a.75.75 0 1 0 1.06-1.06Z"/></svg>
-                <span>{{:time}}</span>
-              </span>
-              <span class="inline-flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 1 0-5-5 5.006 5.006 0 0 0 5 5Zm0 2c-3.33 0-10 1.67-10 5v1a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1v-1c0-3.33-6.67-5-10-5Z"/></svg>
-                <span class="truncate">{{:author}}</span>
-              </span>
-            </div>
-          </div>
-          <span class="shrink-0 inline-flex items-center rounded-full bg-teal-50 text-teal-700 text-xs font-semibold px-2 py-1 border border-teal-200">{{:badge || 'Announcement'}}</span>
-        </header>
+  createContentTemplate() {
+    if (!this.lessonTemplateRegistered) {
+      $.views.helpers({
+        normalizeProgress: function (progress) {
+          const state =
+            progress && typeof progress === "object" ? progress : {};
+          if (!state._inProgressSet) {
+            const arr = Array.isArray(state.inProgressLessonIds)
+              ? state.inProgressLessonIds
+              : [];
+            state._inProgressSet = new Set(arr.map((id) => Number(id)));
+          }
+          if (!state._completedSet) {
+            const arr = Array.isArray(state.completedLessonIds)
+              ? state.completedLessonIds
+              : [];
+            state._completedSet = new Set(arr.map((id) => Number(id)));
+          }
+          state._lastLessonNumber =
+            state.lastLessonId != null ? Number(state.lastLessonId) : null;
+          return state;
+        },
+        lessonState: function (lessonId, progress) {
+          const normalized = $.views.helpers.normalizeProgress(progress);
+          const id = Number(lessonId);
+          if (!id) return "not_started";
+          if (normalized._lastLessonNumber === id) return "resume";
+          if (normalized._completedSet.has(id)) return "completed";
+          if (normalized._inProgressSet.has(id)) return "in_progress";
+          return "not_started";
+        },
+        lessonButtonLabel: function (lessonId, progress) {
+          const state = $.views.helpers.lessonState(lessonId, progress);
+          if (state === "resume") return "Resume";
+          if (state === "completed") return "Completed";
+          return "Start";
+        },
+        lessonButtonClass: function (lessonId, progress) {
+          const state = $.views.helpers.lessonState(lessonId, progress);
+          const base =
+            "lesson-launch inline-flex items-center gap-1 rounded-md px-3 py-1 text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2";
+          if (state === "completed") {
+            return `${base} bg-emerald-600 text-white hover:bg-emerald-500`; // same as "resume" state
+          }
 
-        <div class="mt-3 text-slate-700 leading-relaxed">
-          {{:summary}}
+          if (state === "resume") {
+            return `${base} bg-emerald-600 text-white hover:bg-emerald-500`;
+          }
+          return `${base} bg-sky-700 text-white hover:bg-sky-600`;
+        },
+        lessonHref: function (lessonId, progress) {
+          const normalized = $.views.helpers.normalizeProgress(progress);
+          const id = Number(lessonId);
+          if (!id) return "#";
+          const map = normalized?.lessonUrlMap ?? {};
+          return map[id] || "#";
+        },
+        shouldOpenLesson: function (lessonId, progress) {
+          const state = $.views.helpers.lessonState(lessonId, progress);
+          if (state === "completed") return false;
+          return $.views.helpers.lessonHref(lessonId, progress) !== "#";
+        },
+      });
+      $.views.helpers.lessonTemplateRegistered = true;
+    }
+
+    const template = `<div>
+        <p class="text-xs uppercase tracking-wider text-slate-500">Modules &amp; Lessons</p>
+        <div class="mt-2 mb-6 flex items-end justify-between">
+          <h1 class="text-2xl font-semibold tracking-tight text-slate-800">Course Content</h1>
         </div>
-
-        {{if attachments && attachments.length}}
-        <div class="mt-3 flex flex-wrap gap-2">
-          {{for attachments}}
-            <a href="{{:url}}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-sm px-3 py-1 rounded border border-slate-200 hover:bg-slate-50">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M9 17a5 5 0 0 1 0-10h8a3 3 0 0 1 0 6H9a1 1 0 0 1 0-2h8a1 1 0 0 0 0-2H9a3 3 0 0 0 0 6h8a5 5 0 0 0 0-10H9a7 7 0 0 0 0 14h8a7 7 0 0 0 0-14H9"/></svg>
-              <span class="truncate max-w-[12rem]">{{:name}}</span>
-            </a>
-          {{/for}}
-        </div>
-        {{/if}}
-
-        <footer class="mt-4 flex items-center justify-between">
-          <div class="text-slate-500 text-sm">{{:category || 'General'}}</div>
-          <a href="#" class="text-teal-700 hover:text-teal-800 text-sm font-semibold">Read more →</a>
-        </footer>
-
-        <div class="mt-3 flex items-center gap-4">
-          <button class="roundedButton {{:votes ? 'is-voted' : ''}}" data-action="ann-upvote" data-ann-id="{{:id}}" data-vote-count="{{:votes}}">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="#007C8F" xmlns="http://www.w3.org/2000/svg"><path d="M14.3092 5.81653C14.1751 5.66459 14.0103 5.54291 13.8255 5.45958C13.6408 5.37625 13.4405 5.33318 13.2378 5.33322H9.90462V4.38087C9.90462 3.74942 9.65378 3.14384 9.20728 2.69734C8.76079 2.25084 8.1552 2 7.52376 2C7.43529 1.99994 7.34856 2.02452 7.27329 2.07099C7.19801 2.11746 7.13717 2.18397 7.09758 2.26309L4.84885 6.76174H2.28584C2.03327 6.76174 1.79103 6.86207 1.61243 7.04067C1.43383 7.21927 1.3335 7.46151 1.3335 7.71409V12.952C1.3335 13.2046 1.43383 13.4468 1.61243 13.6254C1.79103 13.804 2.03327 13.9043 2.28584 13.9043H12.5236C12.8716 13.9045 13.2077 13.7775 13.4688 13.5474C13.7298 13.3172 13.8979 12.9997 13.9414 12.6544L14.6557 6.9403C14.681 6.73913 14.6632 6.53488 14.6034 6.34112C14.5437 6.14736 14.4434 5.96854 14.3092 5.81653ZM2.28584 7.71409H4.66671V12.952H2.28584V7.71409Z"/></svg>
-            <p class="text-label vote-count">{{:votes}}</p>
-          </button>
-          <div class="text-[#007b8e] text-label cursor-pointer" data-action="ann-toggle-reply" data-ann-id="{{:id}}">Reply</div>
-        </div>
-
-        <div id="ann-comments-{{:id}}" class="mt-4 space-y-3">
-          {{for Comment}}
-          <div class="p-4 bg-slate-100 rounded">
-            <div class="flex items-center gap-2 text-slate-600 text-sm">
-              <span class="font-semibold">{{:author}}</span>
-              <span class="w-1 h-1 rounded-full bg-slate-300"></span>
-              <span>{{:published}}</span>
-            </div>
-            <div class="mt-2 text-slate-700">{{:text}}</div>
-            <div class="mt-3 flex items-center gap-4">
-              <button class="roundedButton" data-action="ann-comment-upvote" data-ann-comment-id="{{:id}}">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="#007C8F" xmlns="http://www.w3.org/2000/svg"><path d="M14.3092 5.81653C14.1751 5.66459 14.0103 5.54291 13.8255 5.45958C13.6408 5.37625 13.4405 5.33318 13.2378 5.33322H9.90462V4.38087C9.90462 3.74942 9.65378 3.14384 9.20728 2.69734C8.76079 2.25084 8.1552 2 7.52376 2C7.43529 1.99994 7.34856 2.02452 7.27329 2.07099C7.19801 2.11746 7.13717 2.18397 7.09758 2.26309L4.84885 6.76174H2.28584C2.03327 6.76174 1.79103 6.86207 1.61243 7.04067C1.43383 7.21927 1.3335 7.46151 1.3335 7.71409V12.952C1.3335 13.2046 1.43383 13.4468 1.61243 13.6254C1.79103 13.804 2.03327 13.9043 2.28584 13.9043H12.5236C12.8716 13.9045 13.2077 13.7775 13.4688 13.5474C13.7298 13.3172 13.8979 12.9997 13.9414 12.6544L14.6557 6.9403C14.681 6.73913 14.6632 6.53488 14.6034 6.34112C14.5437 6.14736 14.4434 5.96854 14.3092 5.81653ZM2.28584 7.71409H4.66671V12.952H2.28584V7.71409Z"/></svg>
-                <div class="text-label vote-count">{{:votes}}</div>
-              </button>
-              <div class="text-[#007b8e] text-label cursor-pointer" data-action="ann-comment-reply" data-ann-comment-id="{{:id}}">Reply</div>
-            </div>
-          </div>
-          {{/for}}
-        </div>
-
-        <form id="ann-reply-form-{{:id}}" class="mt-3 ann-reply-form hidden" data-ann-id="{{:id}}">
-          <div class="containerForToolbar mb-2">
-            <div class="flex flex-wrap items-center gap-2 bg-white border border-gray-300 rounded p-2 shadow">
-              <button type="button" class="px-2 py-1 rounded hover:bg-gray-200" title="Bold">𝐁</button>
-              <button type="button" class="px-2 py-1 rounded hover:bg-gray-200" title="Italic">𝐼</button>
-              <button type="button" class="px-2 py-1 rounded hover:bg-gray-200" title="Underline">U̲</button>
-              <button type="button" class="px-2 py-1 rounded hover:bg-gray-200" title="Add Link">🔗</button>
-            </div>
-          </div>
-          <div class="post-input">
-            <div contenteditable="true" class="ann-reply-editor" placeholder="Write a reply..."></div>
-          </div>
-          <div class="mt-2 flex items-center gap-2 justify-end">
-            <button class="post px-4 py-2" data-action="ann-reply-submit">Post Reply</button>
-          </div>
-        </form>
-      </article>`;
-    $.templates(this.announcementTemplateName, tmpl);
-  }
-
-  renderAnnouncements(items) {
-    if (!Array.isArray(items)) return;
-    const container = document.getElementById("announcementsList");
-    if (!container) return;
-    const html = $.render[this.announcementTemplateName](items);
-    container.innerHTML = html;
-    this.bindAnnouncementInteractions();
-  }
-
-  bindAnnouncementInteractions() {
-    const root = document.getElementById("announcementsList");
-    if (!root) return;
-
-    root.addEventListener("click", (e) => {
-      const btn = e.target.closest('[data-action="ann-upvote"]');
-      if (!btn) return;
-      const countEl = btn.querySelector(".vote-count");
-      let count = Number(btn.getAttribute("data-vote-count") || 0);
-      const voted = btn.classList.toggle("is-voted");
-      count = voted ? count + 1 : Math.max(0, count - 1);
-      btn.setAttribute("data-vote-count", String(count));
-      if (countEl) countEl.textContent = String(count);
-    });
-
-    root.addEventListener("click", (e) => {
-      const t = e.target.closest('[data-action="ann-toggle-reply"]');
-      if (!t) return;
-      const id = t.getAttribute("data-ann-id");
-      const form = document.getElementById(`ann-reply-form-${id}`);
-      if (form) form.classList.toggle("hidden");
-      this.implementToolbarEffect();
-    });
-
-    root.addEventListener("click", (e) => {
-      const t = e.target.closest('[data-action="ann-reply-submit"]');
-      if (!t) return;
-      e.preventDefault();
-      const form = t.closest(".ann-reply-form");
-      const id = form?.getAttribute("data-ann-id");
-      const editor = form?.querySelector(".ann-reply-editor");
-      const text = (editor?.innerHTML || "").trim();
-      if (!text) return;
-      const list = document.getElementById(`ann-comments-${id}`);
-      const node = document.createElement("div");
-      node.className = "p-4 bg-slate-100 rounded";
-      node.innerHTML = `
-        <div class=\"flex items-center gap-2 text-slate-600 text-sm\"> 
-          <span class=\"font-semibold\">You</span>
-          <span class=\"w-1 h-1 rounded-full bg-slate-300\"></span>
-          <span>just now</span>
-        </div>
-        <div class=\"mt-2 text-slate-700\">${text}</div>
-        <div class=\"mt-3 flex items-center gap-4\">
-          <button class=\"roundedButton\" data-action=\"ann-comment-upvote\" data-ann-comment-id=\"temp-${Date.now()}\"> 
-            <svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"#007C8F\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M14.3092 5.81653C14.1751 5.66459 14.0103 5.54291 13.8255 5.45958C13.6408 5.37625 13.4405 5.33318 13.2378 5.33322H9.90462V4.38087C9.90462 3.74942 9.65378 3.14384 9.20728 2.69734C8.76079 2.25084 8.1552 2 7.52376 2C7.43529 1.99994 7.34856 2.02452 7.27329 2.07099C7.19801 2.11746 7.13717 2.18397 7.09758 2.26309L4.84885 6.76174H2.28584C2.03327 6.76174 1.79103 6.86207 1.61243 7.04067C1.43383 7.21927 1.3335 7.46151 1.3335 7.71409V12.952C1.3335 13.2046 1.43383 13.4468 1.61243 13.6254C1.79103 13.804 2.03327 13.9043 2.28584 13.9043H12.5236C12.8716 13.9045 13.2077 13.7775 13.4688 13.5474C13.7298 13.3172 13.8979 12.9997 13.9414 12.6544L14.6557 6.9403C14.681 6.73913 14.6632 6.53488 14.6034 6.34112C14.5437 6.14736 14.4434 5.96854 14.3092 5.81653ZM2.28584 7.71409H4.66671V12.952H2.28584V7.71409Z\"/></svg>
-            <div class=\"text-label vote-count\">0</div>
-          </button>
-          <div class=\"text-[#007b8e] text-label cursor-pointer\" data-action=\"ann-comment-reply\">Reply</div>
-        </div>`;
-      list?.appendChild(node);
-      if (editor) editor.innerHTML = "";
-      form?.classList.add("hidden");
-    });
-
-    root.addEventListener("click", (e) => {
-      const btn = e.target.closest('[data-action=\"ann-comment-upvote\"]');
-      if (!btn) return;
-      const countEl = btn.querySelector(".vote-count");
-      let count = Number((countEl?.textContent || "0").trim());
-      const voted = btn.classList.toggle("is-voted");
-      count = voted ? count + 1 : Math.max(0, count - 1);
-      if (countEl) countEl.textContent = String(count);
-    });
-  }
-
-  ensureContentTemplate() {
-    if ($.templates[this.contentTemplateName]) return;
-    const tmpl = `
-    {{if isFirst}}
-        <section class="py-6 border-b border-slate-200">
-          <div class="flex flex-col md:flex-row items-start justify-between gap-4 md:gap-7">
-            <div class="flex items-start gap-3 w-full min-w-0 md:min-w-[360px] md:flex-[0_0_460px] pl-4">
+        <div class="border-t border-slate-200"></div>
+        {{for modules ~progress=~root.progress}}
+        <section class="flex flex-col gap-7 items-start py-6 border border-slate-200 rounded-xl px-4 my-4 bg-white card-hover">
+          <div class="flex items-start gap-7 w-full flex-wrap md:flex-nowrap">
+            <div class="flex items-start gap-3 w-full max-w-[460px] pl-4 sm:min-w-[280px]">
               <div class="flex items-center justify-center w-6 h-6 rounded-md border border-cyan-700 text-cyan-700 shrink-0 mt-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 11V8a4 4 0 1 1 8 0m-9 3h10a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2z" />
-                </svg>
+                <svg width="16" height="24" class="max-[800px]:!size-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.44444 9.27295H9.92593V9.87858H20.2963C20.6892 9.87858 21.066 10.0205 21.3439 10.2731C21.6217 10.5256 21.7778 10.8682 21.7778 11.2254V20.6533C21.7778 21.0105 21.6217 21.353 21.3439 21.6056C21.066 21.8582 20.6892 22.0001 20.2963 22.0001H5.48148C5.08857 22.0001 4.71175 21.8582 4.43392 21.6056C4.15608 21.353 4 21.0105 4 20.6533V11.2254C4 10.8682 4.15608 10.5256 4.43392 10.2731C4.71175 10.0205 5.08857 9.87858 5.48148 9.87858H8.44444V9.27295ZM13.6296 18.633V16.4974C14.1239 16.3386 14.5404 16.026 14.8057 15.6149C15.0709 15.2039 15.1678 14.7208 15.0791 14.2511C14.9905 13.7814 14.722 13.3553 14.3212 13.0481C13.9204 12.7409 13.4131 12.5725 12.8889 12.5725C12.3647 12.5725 11.8573 12.7409 11.4565 13.0481C11.0558 13.3553 10.7873 13.7814 10.6987 14.2511C10.61 14.7208 10.7069 15.2039 10.9721 15.6149C11.2374 16.026 11.6539 16.3386 12.1481 16.4974V18.633C12.1481 18.8116 12.2262 18.9829 12.3651 19.1092C12.504 19.2355 12.6924 19.3064 12.8889 19.3064C13.0853 19.3064 13.2738 19.2355 13.4127 19.1092C13.5516 18.9829 13.6296 18.8116 13.6296 18.633Z" fill="#007C8F"></path><path d="M9 10.182V6.54787C9.002 4.21375 7.4308 2.25781 5.3656 2.02326C3.3004 1.78871 1.4132 3.35191 1 5.63922" stroke="#007C8F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
               </div>
               <div class="flex flex-col gap-2 min-w-0">
-                <h3 class="text-xl leading-snug">{{:title}}</h3>
-                <a href="#" class="text-teal-700 font-medium hover:underline">Unlocked</a>
+                <h3 class="text-base leading-snug">{{:module_name}}</h3>
+                <span class="text-sky-700 text-xs font-medium">Unlocked</span>
               </div>
             </div>
-            <div class="flex items-center gap-4 flex-wrap">
-              <div class="flex items-center gap-6 text-slate-600">
-                <span class="inline-flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 1.75a10.25 10.25 0 1 0 0 20.5 10.25 10.25 0 0 0 0-20.5Zm.75 5.5a.75.75 0 0 0-1.5 0v5.25c0 .2.08.39.22.53l3.25 3.25a.75.75 0 1 0 1.06-1.06l-3.03-3.03V7.25Z"/>
-                  </svg>
-                  <span class="font-semibold text-slate-700">{{:time}}</span>
-                </span>
-                <span class="inline-flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M4 6.75A1.75 1.75 0 0 1 5.75 5h12.5A1.75 1.75 0 0 1 20 6.75v10.5A1.75 1.75 0 0 1 18.25 19H5.75A1.75 1.75 0 0 1 4 17.25V6.75Zm2 .25v1.5h12V7H6Zm0 3v6.25h12V10H6Z"/>
-                  </svg>
-                  <span class="font-semibold text-slate-700">{{:units}} Units</span>
-                </span>
-              </div>
-              <button class="text-slate-500 hover:text-slate-700" data-action="toggle-module" data-id="{{:index}}">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-200 rotate-0" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M6 9.75 12 15l6-5.25" />
-                </svg>
-              </button>
-            </div>
-          </div>
-          <div id="panel-{{:index}}" class="mt-4 flex flex-col md:flex-row overflow-hidden rounded-lg shadow-sm ring-1 ring-black/5">
-            <div class="flex w-full md:w-20 items-center justify-center bg-teal-700 text-2xl font-semibold text-white">{{:index}}</div>
-            <div class="flex w-full flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-gradient-to-r from-teal-50 to-teal-50/60 px-6 py-5">
-              <div class="flex min-w-0 items-center gap-4">
-                <span class="inline-block h-5 w-5 rounded-full border-2 border-gray-300"></span>
-                <h3 class="truncate text-xl font-semibold text-gray-900">{{:lessonTitle}}</h3>
-              </div>
-              <div class="flex w-full md:w-auto items-center gap-4 md:gap-6 justify-between md:justify-end flex-wrap">
-                <div class="flex items-center gap-2 text-gray-700">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M3 18v-3a9 9 0 0 1 18 0v3" />
-                    <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3" />
-                    <path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3" />
-                  </svg>
-                  <span class="text-base font-medium">{{:lessonTime}}</span>
+            <div class="flex flex-1 min-w-0 items-start justify-between gap-4 cursor-pointer" data-module-header>
+              <p class="text-slate-600 max-w-[780px] text-[0.8rem] h-4 overflow-hidden whitespace-nowrap text-ellipsis">{{:description}}</p>
+              <div class="flex items-center gap-7 shrink-0">
+                <div class="flex items-center gap-6 text-slate-600">
+                  {{if modules_length}}
+                  <span class="inline-flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="#0ea5e9"><path d="M6.99998 1.1665C5.84625 1.1665 4.71844 1.50862 3.75915 2.1496C2.79986 2.79057 2.05219 3.70161 1.61068 4.76752C1.16917 5.83342 1.05365 7.00631 1.27873 8.13786C1.50381 9.26942 2.05938 10.3088 2.87519 11.1246C3.69099 11.9404 4.73039 12.496 5.86195 12.7211C6.99351 12.9462 8.16639 12.8306 9.2323 12.3891C10.2982 11.9476 11.2092 11.1999 11.8502 10.2407C12.4912 9.28137 12.8333 8.15356 12.8333 6.99984C12.8317 5.45324 12.2166 3.97046 11.123 2.87685C10.0294 1.78324 8.54657 1.16814 6.99998 1.1665ZM10.141 7.44855H6.99998C6.88097 7.44855 6.76684 7.40128 6.68268 7.31713C6.59853 7.23298 6.55126 7.11884 6.55126 6.99984V3.85881C6.55126 3.7398 6.59853 3.62567 6.68268 3.54152C6.76684 3.45737 6.88097 3.41009 6.99998 3.41009C7.11898 3.41009 7.23312 3.45737 7.31727 3.54152C7.40142 3.62567 7.44869 3.7398 7.44869 3.85881V6.55112H10.141C10.26 6.55112 10.3741 6.59839 10.4583 6.68254C10.5424 6.7667 10.5897 6.88083 10.5897 6.99984C10.5897 7.11884 10.5424 7.23298 10.4583 7.31713C10.3741 7.40128 10.26 7.44855 10.141 7.44855Z"/></svg>
+                    <span class="text-xs font-medium text-slate-600">{{:modules_length}} min</span>
+                  </span>
+                  {{/if}}
+                  {{if modules_unit}}
+                  <span class="inline-flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="#0ea5e9"><path d="M4 6.75A1.75 1.75 0 0 1 5.75 5h12.5A1.75 1.75 0 0 1 20 6.75v10.5A1.75 1.75 0 0 1 18.25 19H5.75A1.75 1.75 0 0 1 4 17.25V6.75Zm2 .25v1.5h12V7H6Zm0 3v6.25h12V10H6Z"/></svg>
+                    <span class="text-xs font-medium text-slate-600">{{:modules_unit}} Lessons</span>
+                  </span>
+                  {{/if}}
                 </div>
-                <button class="inline-flex items-center gap-2 rounded-md bg-teal-700 px-5 py-2.5 text-base font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-2">
-                  Start
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M9 18l6-6-6-6" />
-                  </svg>
+                <button class="text-slate-500 hover:text-slate-700" data-module-toggle aria-expanded="false">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform rotate-0" viewBox="0 0 24 24" fill="#0ea5e9"><path d="M6 9.75 12 15l6-5.25"/></svg>
                 </button>
               </div>
             </div>
           </div>
-        </section>
-      {{else}}
-        <section class="flex flex-col md:flex-row gap-7 items-start py-6 border-b border-slate-200">
-          <div class="flex items-start gap-3 w-full min-w-0 md:min-w-[360px] md:flex-[0_0_460px] pl-4">
-            <div class="flex items-center justify-center w-6 h-6 rounded-md border border-cyan-700 text-cyan-700 shrink-0 mt-1">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 11V8a4 4 0 1 1 8 0m-9 3h10a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2z" />
-              </svg>
-            </div>
-            <div class="flex flex-col gap-2 min-w-0">
-              <h3 class="text-xl leading-snug">{{:title}}</h3>
-              <a href="#" class="text-teal-700 font-medium hover:underline">Unlocked</a>
-            </div>
-          </div>
-          <div class="flex flex-1 flex-col md:flex-row items-start justify-between gap-4">
-            <p class="text-slate-600 max-w-full md:max-w-[780px]">{{:description}}</p>
-            <div class="flex items-center gap-4 flex-wrap">
-              <div class="flex items-center gap-6 text-slate-600">
-                <span class="inline-flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 1.75a10.25 10.25 0 1 0 0 20.5 10.25 10.25 0 0 0 0-20.5Zm.75 5.5a.75.75 0 0 0-1.5 0v5.25c0 .2.08.39.22.53l3.25 3.25a.75.75 0 1 0 1.06-1.06l-3.03-3.03V7.25Z"/>
-                  </svg>
-                  <span class="font-semibold text-slate-700">{{:time}}</span>
-                </span>
-                <span class="inline-flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M4 6.75A1.75 1.75 0 0 1 5.75 5h12.5A1.75 1.75 0 0 1 20 6.75v10.5A1.75 1.75 0 0 1 18.25 19H5.75A1.75 1.75 0 0 1 4 17.25V6.75Zm2 .25v1.5h12V7H6Zm0 3v6.25h12V10H6Z"/>
-                  </svg>
-                  <span class="font-semibold text-slate-700">{{:units}} Units</span>
-                </span>
-              </div>
-              <button class="text-slate-500 hover:text-slate-700">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 rotate-0" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M6 9.75 12 15l6-5.25" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </section>
-      {{else}}
-        <section class="flex flex-col md:flex-row gap-7 items-start py-6 border-b border-slate-200">
-          <div class="flex items-start gap-3 w-full min-w-0 md:min-w-[360px] md:flex-[0_0_460px] pl-4">
-            <div class="flex items-center justify-center w-6 h-6 rounded-md border border-cyan-700 text-cyan-700 shrink-0 mt-1">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 11V8a4 4 0 1 1 8 0m-9 3h10a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2z" />
-              </svg>
-            </div>
-            <div class="flex flex-col gap-2 min-w-0">
-              <h3 class="text-xl leading-snug">{{:title}}</h3>
-              <a href="#" class="text-teal-700 font-medium hover:underline">Unlocked</a>
-            </div>
-          </div>
-          <div class="flex flex-1 flex-col md:flex-row items-start justify-between gap-4">
-            <p class="text-slate-600 max-w-full md:max-w-[780px]">{{:description}}</p>
-            <div class="flex items-center gap-4 flex-wrap">
-              <div class="flex items-center gap-6 text-slate-600">
-                <span class="inline-flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 1.75a10.25 10.25 0 1 0 0 20.5 10.25 10.25 0 0 0 0-20.5Zm.75 5.5a.75.75 0 0 0-1.5 0v5.25c0 .2.08.39.22.53l3.25 3.25a.75.75 0 1 0 1.06-1.06l-3.03-3.03V7.25Z"/>
-                  </svg>
-                  <span class="font-semibold text-slate-700">{{:time}}</span>
-                </span>
-                <span class="inline-flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M4 6.75A1.75 1.75 0 0 1 5.75 5h12.5A1.75 1.75 0 0 1 20 6.75v10.5A1.75 1.75 0 0 1 18.25 19H5.75A1.75 1.75 0 0 1 4 17.25V6.75Zm2 .25v1.5h12V7H6Zm0 3v6.25h12V10H6Z"/>
-                  </svg>
-                  <span class="font-semibold text-slate-700">{{:units}} Units</span>
-                </span>
-              </div>
-              <button class="text-slate-500 hover:text-slate-700" data-action="toggle-module" data-id="{{:index}}">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-200 rotate-0" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M6 9.75 12 15l6-5.25" />
-                </svg>
-              </button>
-            </div>
-          </div>
-          <!-- Collapsible panel for non-first modules (hidden by default) -->
-          <div id="panel-{{:index}}" class="hidden mt-4 overflow-hidden rounded-lg shadow-sm ring-1 ring-black/5 bg-teal-50/50">
-            <div class="flex items-center justify-between gap-4 px-6 py-5">
-              <div class="flex items-center gap-4 min-w-0">
-                <span class="inline-block h-5 w-5 rounded-full border-2 border-gray-300"></span>
-                <h3 class="truncate text-lg font-semibold text-gray-900">{{:lessonTitle || title}}</h3>
-              </div>
-              <div class="flex items-center gap-4">
-                <div class="flex items-center gap-2 text-gray-700">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M3 18v-3a9 9 0 0 1 18 0v3" />
-                    <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3" />
-                    <path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3" />
-                  </svg>
-                  <span class="text-base font-medium">{{:lessonTime || time}}</span>
+          <div class="module-lessons hidden w-full mt-3 text-sm">
+            {{for lessons}}
+            <div class="flex items-stretch bg-sky-100 rounded-sm overflow-hidden mb-3 last:mb-0" data-lesson-row>
+              <div class="w-16 bg-sky-700 text-white text-center py-4 font-semibold">{{:#index+1}}</div>
+              <div class="flex-1 px-4 py-4 flex items-center justify-between flex-wrap gap-3">
+                <div class="flex items-center gap-3">
+                  {{if ~lessonState(id, ~progress) === 'completed'}}
+                  <span class="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-semibold text-white">✓</span>
+                  {{else ~lessonState(id, ~progress) === 'resume' || ~lessonState(id, ~progress) === 'in_progress'}}
+                  <span class="h-4 w-4 rounded-full border-2 border-sky-500 bg-gradient-to-br from-sky-500/90 via-sky-400/70 to-white/80"></span>
+                  {{else}}
+                  <span class="h-4 w-4 rounded-full border-2 border-slate-300"></span>
+                  {{/if}}
+                  <span class="text-slate-800 font-medium text-sm">{{:lesson_name}}</span>
                 </div>
-                <button class="inline-flex items-center gap-2 rounded-md bg-teal-700 px-5 py-2.5 text-base font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-2">
-                  Start
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M9 18l6-6-6-6" />
-                  </svg>
-                </button>
+                <div class="flex items-center gap-4">
+                  {{if lesson_length}}
+                  <span class="inline-flex items-center gap-1 text-sky-800 text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="#0ea5e9"><path d="M6.99998 1.1665C5.84625 1.1665 4.71844 1.50862 3.75915 2.1496C2.79986 2.79057 2.05219 3.70161 1.61068 4.76752C1.16917 5.83342 1.05365 7.00631 1.27873 8.13786C1.50381 9.26942 2.05938 10.3088 2.87519 11.1246C3.69099 11.9404 4.73039 12.496 5.86195 12.7211C6.99351 12.9462 8.16639 12.8306 9.2323 12.3891C10.2982 11.9476 11.2092 11.1999 11.8502 10.2407C12.4912 9.28137 12.8333 8.15356 12.8333 6.99984C12.8317 5.45324 12.2166 3.97046 11.123 2.87685C10.0294 1.78324 8.54657 1.16814 6.99998 1.1665ZM10.141 7.44855H6.99998C6.88097 7.44855 6.76684 7.40128 6.68268 7.31713C6.59853 7.23298 6.55126 7.11884 6.55126 6.99984V3.85881C6.55126 3.7398 6.59853 3.62567 6.68268 3.54152C6.76684 3.45737 6.88097 3.41009 6.99998 3.41009C7.11898 3.41009 7.23312 3.45737 7.31727 3.54152C7.40142 3.62567 7.44869 3.7398 7.44869 3.85881V6.55112H10.141C10.26 6.55112 10.3741 6.59839 10.4583 6.68254C10.5424 6.7667 10.5897 6.88083 10.5897 6.99984C10.5897 7.11884 10.5424 7.23298 10.4583 7.31713C10.3741 7.40128 10.26 7.44855 10.141 7.44855Z"/></svg>
+                    <span>{{:lesson_length}} min</span>
+                  </span>
+                  {{/if}}
+                 <a
+                    data-lesson-action="launch"
+                    data-lesson-id="{{:id}}"
+                    data-module-id="{{:#parent.data.id}}"
+                    data-module-name="{{:#parent.data.module_name}}"
+                    data-lesson-status="{{:~lessonState(id, ~progress)}}"
+                    class="{{:~lessonButtonClass(id, ~progress)}}"
+                    href="{{:~lessonHref(id, ~progress)}}"
+                  >
+                    <span>{{:~lessonButtonLabel(id, ~progress)}}</span>
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="#0ea5e9"><path d="M9.5 7l5 5-5 5"/></svg>
+                  </a>
+
+                </div>
               </div>
             </div>
+            {{/for}}
           </div>
         </section>
-      {{/if}}`;
-    $.templates(this.contentTemplateName, tmpl);
+        {{/for}}
+      </div>`;
+
+    if (!$.templates[this.contentTemplateName])
+      $.templates(this.contentTemplateName, template);
   }
 
-  renderContentModules(modules) {
-    if (!Array.isArray(modules)) return;
-    const container = document.getElementById("contentModulesList");
-    if (!container) return;
-    const html = $.render[this.contentTemplateName](modules);
-    container.innerHTML = html;
-    this.bindContentModuleToggles();
+  updateCourseHeader(courseName = "") {
+    const el = document.getElementById("course-title");
+    if (!el) return;
+
+    const fallback = el.getAttribute("data-default-title") ?? "";
+    const nextTitle = courseName?.trim() ? courseName : fallback;
+    el.textContent = nextTitle;
+
+    if (courseName?.trim()) {
+      document.title = courseName;
+    }
   }
 
-  bindContentModuleToggles() {
-    const container = document.getElementById("contentModulesList");
-    if (!container) return;
-    container.addEventListener(
-      "click",
-      (e) => {
-        const btn = e.target.closest('[data-action="toggle-module"]');
-        if (!btn) return;
-        const id = btn.getAttribute("data-id");
-        const panel = document.getElementById(`panel-${id}`);
-        const icon = btn.querySelector("svg");
-        if (panel) panel.classList.toggle("hidden");
-        if (icon) icon.classList.toggle("rotate-180");
-      },
-      { passive: true }
-    );
+  renderCourseContent({ modules = [], progress = this.progressState } = {}) {
+    this.createContentTemplate();
+    const mount = document.getElementById("content-section");
+    if (!Array.isArray(modules) || modules.length === 0) {
+      if (mount) mount.innerHTML = "";
+      return;
+    }
+    this.progressState = progress || this.progressState;
+    const html = $.render[this.contentTemplateName]({
+      modules,
+      progress: this.progressState,
+    });
+    if (mount) {
+      mount.innerHTML = html;
+      this.attachModuleToggleHandlers(mount);
+      this.bindLessonButtons(mount);
+    }
   }
 
-  ensureTemplate() {
+  attachModuleToggleHandlers(scope = document) {
+    const togglePanel = (button) => {
+      const section = button.closest("section");
+      const panel = section?.querySelector(".module-lessons");
+      if (!panel) return;
+      const willShow = panel.classList.contains("hidden");
+      panel.classList.toggle("hidden");
+      // Expand/collapse the description to its needed height when toggling
+      const desc = section?.querySelector("[data-module-header] > p");
+      if (desc) {
+        const clampClasses = [
+          "h-4",
+          "overflow-hidden",
+          "whitespace-nowrap",
+          "text-ellipsis",
+        ];
+        if (willShow) {
+          clampClasses.forEach((c) => desc.classList.remove(c));
+        } else {
+          clampClasses.forEach((c) => desc.classList.add(c));
+        }
+      }
+      const icon = button.querySelector("svg");
+      if (icon) icon.classList.toggle("rotate-180", willShow);
+      button.setAttribute("aria-expanded", String(willShow));
+    };
+    scope.querySelectorAll("[data-module-toggle]").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        togglePanel(btn);
+      });
+    });
+    scope.querySelectorAll("[data-module-header]").forEach((header) => {
+      header.addEventListener("click", () => {
+        const btn = header
+          .closest("section")
+          ?.querySelector("[data-module-toggle]");
+        if (btn) togglePanel(btn);
+      });
+    });
+  }
+
+  registerLessonActionHandler(handler) {
+    this.lessonActionHandler = handler;
+  }
+
+  registerBannerActionHandler(handler) {
+    this.bannerActionHandler = handler;
+    this.setupBannerButton();
+  }
+
+  setupBannerButton() {
+    if (!this.bannerButton) return;
+    if (this.bannerClickHandler) {
+      this.bannerButton.removeEventListener("click", this.bannerClickHandler);
+    }
+    this.bannerClickHandler = (event) => {
+      if (typeof this.bannerActionHandler === "function") {
+        this.bannerActionHandler({
+          event,
+          lessonId: this.bannerButton.dataset.lessonId,
+          url: this.bannerButton.dataset.href,
+        });
+      }
+    };
+    this.bannerButton.addEventListener("click", this.bannerClickHandler);
+  }
+
+  bindLessonButtons(scope = document) {
+    const buttons = scope.querySelectorAll("[data-lesson-action='launch']");
+    buttons.forEach((button) => {
+      button.addEventListener("click", (event) => {
+        if (typeof this.lessonActionHandler !== "function") return;
+        this.lessonActionHandler({
+          event,
+          lessonId: button.dataset.lessonId,
+          moduleId: button.dataset.moduleId,
+          moduleName: button.dataset.moduleName,
+          lessonStatus: button.dataset.lessonStatus,
+          url: button.getAttribute("href"),
+        });
+      });
+    });
+  }
+
+  updateResumeBanner(progress = this.progressState) {
+    this.progressState = progress || this.progressState;
+    const button = this.bannerButton;
+    const label = document.getElementById("course-resume-label");
+    const details = document.getElementById("resume-details");
+    const lessonNameEl = document.getElementById("resume-lesson-name");
+    const moduleNameEl = document.getElementById("resume-module-name");
+
+    if (!button || !label) return;
+
+    const hasLastLesson = Boolean(progress?.lastLessonId);
+    const buttonState = hasLastLesson ? "resume" : "start";
+    const btnLabel = hasLastLesson ? "Resume" : "Start";
+    label.textContent = btnLabel;
+    button.dataset.state = buttonState;
+    button.dataset.lessonId = hasLastLesson
+      ? String(progress.lastLessonId)
+      : "";
+    button.dataset.href = progress?.resumeUrl ?? "";
+
+    if (hasLastLesson && details && lessonNameEl && moduleNameEl) {
+      details.classList.remove("hidden");
+      lessonNameEl.textContent = progress?.resumeLessonName ?? "";
+      const moduleName = progress?.resumeModuleName ?? "";
+      moduleNameEl.textContent = moduleName ? `(${moduleName})` : "";
+    } else if (details) {
+      details.classList.add("hidden");
+      if (lessonNameEl) lessonNameEl.textContent = "";
+      if (moduleNameEl) moduleNameEl.textContent = "";
+    }
+  }
+
+  createForumTemplate() {
     const normType = (t) =>
       String(t || "")
         .toLowerCase()
@@ -442,7 +404,7 @@ export class AWCView {
     <!-- POST HEADER -->
     <div class="flex items-center gap-4">
         <img class="w-6 h-6 rounded-full border border-[#d3d3d3]"
-            src="{{:avatar || 'https://i.ontraport.com/265848.fef288b2e2a570a362d1141a783309d8.JPEG'}}">
+            src="{{:authorImage || 'https://i.ontraport.com/265848.fef288b2e2a570a362d1141a783309d8.JPEG'}}">
         <div class="flex flex-wrap items-center gap-4">
             <div class="text-[#414042] button max-[600px]:tracking-[0.86px] line-clamp-1">{{:author}}</div>
             <div class="py-1.5 px-3 bg-[#c7e6e6] rounded-[36px] font-[400] text-[12px] text-[#414042] line-clamp-1">
@@ -473,7 +435,7 @@ export class AWCView {
       {{raw: ~audioPlayerHtml(fileLink, fileName, postId)}}
 
         {{else}}
-        <a href="{{:fileLink}}" target="_blank" rel="noopener" class="underline text-[#007C8F]">
+        <a href="{{:fileLink}}" target="_blank" rel="noopener" class="underline text-[#007C8F] mobile-ellipsis-link">
             {{:fileName}}
         </a>
         {{/if}}
@@ -575,7 +537,7 @@ export class AWCView {
            {{raw: ~audioPlayerHtml(fileLink, fileName, postId)}}
 
             {{else}}
-            <a href="{{:fileLink}}" target="_blank" rel="noopener" class="underline text-[#007C8F]">
+            <a href="{{:fileLink}}" target="_blank" rel="noopener" class="underline text-[#007C8F] mobile-ellipsis-link">
                 {{:fileName}}
             </a>
             {{/if}}
@@ -672,7 +634,7 @@ export class AWCView {
                     {{raw: ~audioPlayerHtml(fileLink, fileName, postId)}}
 
                     {{else}}
-                    <a href="{{:fileLink}}" target="_blank" rel="noopener" class="underline text-[#007C8F]">
+                    <a href="{{:fileLink}}" target="_blank" rel="noopener" class="underline text-[#007C8F] mobile-ellipsis-link">
                         {{:fileName}}
                     </a>
                     {{/if}}
@@ -828,14 +790,21 @@ export class AWCView {
     </form>
 </div>
 </div>`;
-    if (!$.templates[this.templateName])
-      $.templates(this.templateName, template);
+    if (!$.templates[this.chatTemplateName])
+      $.templates(this.chatTemplateName, template);
   }
 
   renderPosts(records) {
     if (!records || records.length == 0) return;
-    const html = $.render[this.templateName](records);
-    if (this.mount) this.mount.innerHTML = html;
+    const html = $.render[this.chatTemplateName](records);
+    if (this.forumtSectionMount) this.forumtSectionMount.innerHTML = html;
+  }
+
+  renderAnnouncement(records) {
+    if (!records || records.length == 0) return;
+    const html = $.render[this.chatTemplateName](records);
+    if (this.announcementMountSection)
+      this.announcementMountSection.innerHTML = html;
   }
 
   onCreatePost(handler) {
@@ -884,137 +853,161 @@ export class AWCView {
   }
 
   onUpvote(handler) {
-    if (!this.mount) return;
-    this.mount.addEventListener("click", (e) => {
-      const t =
-        e.target && e.target.nodeType === Node.TEXT_NODE
-          ? e.target.parentElement
-          : e.target;
-      const postUpvoteBtn = t.closest("[data-action='upvote-post']");
-      const commentUpvoteBtn = t.closest("[data-action='upvote-comment']");
-      const replyUpvoteBtn = t.closest("[data-action='upvote-reply']");
+    if (!this.mount || this.mount.length === 0) return;
 
-      if (!postUpvoteBtn && !commentUpvoteBtn && !replyUpvoteBtn) {
-        return;
-      }
+    this.mount.forEach((mountEl) => {
+      mountEl.addEventListener("click", (e) => {
+        const t =
+          e.target && e.target.nodeType === Node.TEXT_NODE
+            ? e.target.parentElement
+            : e.target;
 
-      let payload;
-      if (postUpvoteBtn) {
-        const postId = postUpvoteBtn.dataset.postId;
-        payload = {
-          type: "post",
-          postId: postId,
-          element: postUpvoteBtn,
-        };
-      } else if (commentUpvoteBtn) {
-        const commentId = commentUpvoteBtn.dataset.commentId;
-        const postCard = commentUpvoteBtn.closest(".postCard");
-        payload = {
-          element: commentUpvoteBtn,
-          type: "comment",
-          commentId: commentId,
-          postId:
-            postCard?.getAttribute("current-post-id") ||
-            commentDeleteBtn.dataset.postId ||
-            null,
-        };
-      } else if (replyUpvoteBtn) {
-        const replyId = replyUpvoteBtn.dataset.replyId;
-        const postCard = replyUpvoteBtn.closest(".postCard");
-        payload = {
-          element: replyUpvoteBtn,
-          type: "reply",
-          commentId: replyId,
-          postId:
-            postCard?.getAttribute("current-post-id") ||
-            commentDeleteBtn.dataset.postId ||
-            null,
-        };
-      }
-      handler?.(payload);
+        const postUpvoteBtn = t.closest("[data-action='upvote-post']");
+        const commentUpvoteBtn = t.closest("[data-action='upvote-comment']");
+        const replyUpvoteBtn = t.closest("[data-action='upvote-reply']");
+
+        const announcementSection = t.closest("#announcements-section");
+        const chatSection = t.closest("#chat-section");
+
+        if (!postUpvoteBtn && !commentUpvoteBtn && !replyUpvoteBtn) return;
+
+        let payload;
+        if (postUpvoteBtn) {
+          payload = {
+            type: "post",
+            postId: postUpvoteBtn.dataset.postId,
+            element: postUpvoteBtn,
+          };
+        } else if (commentUpvoteBtn) {
+          const postCard = commentUpvoteBtn.closest(".postCard");
+          payload = {
+            type: "comment",
+            commentId: commentUpvoteBtn.dataset.commentId,
+            postId:
+              postCard?.getAttribute("current-post-id") ||
+              commentUpvoteBtn.dataset.postId ||
+              null,
+            element: commentUpvoteBtn,
+          };
+        } else if (replyUpvoteBtn) {
+          const postCard = replyUpvoteBtn.closest(".postCard");
+          payload = {
+            type: "reply",
+            commentId: replyUpvoteBtn.dataset.replyId,
+            postId:
+              postCard?.getAttribute("current-post-id") ||
+              replyUpvoteBtn.dataset.postId ||
+              null,
+            element: replyUpvoteBtn,
+          };
+        }
+        if (chatSection) {
+          payload.section = "chat";
+        } else if (announcementSection) {
+          payload.section = "announcement";
+        }
+        handler?.(payload);
+      });
     });
   }
 
   onCommentButtonClicked(handler) {
-    if (!this.mount) return;
-    this.mount.addEventListener("click", (e) => {
-      const el = e.target.closest("[data-action='toggle-comment']");
-      if (!el) return;
-      const postId = el.dataset.postId;
-      handler(postId);
+    if (!this.mount || this.mount.length === 0) return;
+    this.mount.forEach((mountEl) => {
+      mountEl.addEventListener("click", (e) => {
+        const el = e.target.closest("[data-action='toggle-comment']");
+        if (!el) return;
+        handler(el.dataset.postId);
+      });
     });
   }
 
   onReplyButtonClicked(handler) {
-    if (!this.mount) return;
-    this.mount.addEventListener("click", (e) => {
-      const el = e.target.closest("[data-action='toggle-reply']");
-      if (!el) return;
-      const commentId = el.dataset.commentId;
-      handler(commentId);
+    if (!this.mount || this.mount.length === 0) return;
+    this.mount.forEach((mountEl) => {
+      mountEl.addEventListener("click", (e) => {
+        const el = e.target.closest("[data-action='toggle-reply']");
+        if (!el) return;
+        handler(el.dataset.commentId);
+      });
     });
   }
 
   onDeleteRequest(handler) {
-    if (!this.mount) return;
-    this.mount.addEventListener("click", (e) => {
-      const t =
-        e.target && e.target.nodeType === Node.TEXT_NODE
-          ? e.target.parentElement
-          : e.target;
+    if (!this.mount || this.mount.length === 0) return;
+    this.mount.forEach((mountEl) => {
+      mountEl.addEventListener("click", (e) => {
+        const t =
+          e.target && e.target.nodeType === Node.TEXT_NODE
+            ? e.target.parentElement
+            : e.target;
 
-      const postDeleteBtn = t.closest("[data-action='delete-request']");
-      const commentDeleteBtn = t.closest(
-        "[data-action='delete-comment-request']"
-      );
-      if (!postDeleteBtn && !commentDeleteBtn) return;
-      let payload;
+        const postDeleteBtn = t.closest("[data-action='delete-request']");
+        const commentDeleteBtn = t.closest(
+          "[data-action='delete-comment-request']"
+        );
+        if (!postDeleteBtn && !commentDeleteBtn) return;
 
-      if (commentDeleteBtn) {
-        const commentId = commentDeleteBtn.dataset.commentId;
-        const postCard = commentDeleteBtn.closest(".postCard");
-        const postId =
-          postCard?.getAttribute("current-post-id") ||
-          commentDeleteBtn.dataset.postId ||
-          null;
-        payload = { type: "comment", postId, commentId };
-      } else {
-        const postId = postDeleteBtn.dataset.postId;
-        payload = { type: "post", postId };
-      }
-      this.openDeleteModal({
-        onConfirm: () => handler?.(payload),
+        let payload;
+        if (commentDeleteBtn) {
+          const postCard = commentDeleteBtn.closest(".postCard");
+          payload = {
+            type: "comment",
+            postId:
+              postCard?.getAttribute("current-post-id") ||
+              commentDeleteBtn.dataset.postId ||
+              null,
+            commentId: commentDeleteBtn.dataset.commentId,
+          };
+        } else {
+          payload = { type: "post", postId: postDeleteBtn.dataset.postId };
+        }
+
+        this.openDeleteModal({
+          onConfirm: () => handler?.(payload),
+        });
       });
     });
   }
 
   applyUpvoteStyles(postId, voteId) {
-    const el = this.mount?.querySelector(
-      `[data-action="upvote"][data-post-id="${postId}"]`
-    );
-    if (!el) return;
+    if (!this.mount || this.mount.length === 0) return;
 
-    const svgPath = el.querySelector("svg path");
-    const label = el.querySelector("p");
+    this.mount.forEach((mountEl) => {
+      const el = mountEl.querySelector(
+        `[data-action="upvote"][data-post-id="${postId}"]`
+      );
+      if (!el) return;
 
-    const isVoted = voteId != "";
+      const svgPath = el.querySelector("svg path");
+      const label = el.querySelector("p");
+      const isVoted = voteId !== "";
 
-    el.style.setProperty(
-      "background",
-      isVoted ? "#007c8f" : "transparent",
-      "important"
-    );
-    svgPath?.style.setProperty(
-      "fill",
-      isVoted ? "white" : "#007C8F",
-      "important"
-    );
-    label?.style.setProperty("color", isVoted ? "white" : "black", "important");
+      el.style.setProperty(
+        "background",
+        isVoted ? "#007c8f" : "transparent",
+        "important"
+      );
+      svgPath?.style.setProperty(
+        "fill",
+        isVoted ? "white" : "#007C8F",
+        "important"
+      );
+      label?.style.setProperty(
+        "color",
+        isVoted ? "white" : "black",
+        "important"
+      );
+    });
   }
 
   removePostNode(postId) {
-    const node = this.mount?.querySelector(`[current-post-id='${postId}']`);
-    node?.remove();
+    if (!this.mount || this.mount.length === 0) return;
+
+    this.mount.forEach((mountEl) => {
+      const node = mountEl.querySelector(`[current-post-id='${postId}']`);
+      node?.remove();
+    });
   }
 
   openDeleteModal({ onConfirm }) {
@@ -1099,12 +1092,14 @@ export class AWCView {
   }
 
   getCommentValueObj(handler) {
-    const container = document;
     document.addEventListener("submit", async (e) => {
       let form = e.target.closest(".commentForm");
       this.disableHTML(form, "disable");
       if (!form) return;
       e.preventDefault();
+
+      const announcementSection = e.target.closest("#announcements-section");
+      const chatSection = e.target.closest("#chat-section");
 
       // const scope = form.dataset.parentType === 'post' ? 'comment' : 'reply';
       const parentId = form.dataset.parentId || null;
@@ -1135,7 +1130,18 @@ export class AWCView {
         this.disableHTML(form, "enable");
         return;
       }
-      handler?.({ html: html, forumId: Number(parentId) }, fileMeta, form);
+      let section;
+      if (chatSection) {
+        section = "chat";
+      } else if (announcementSection) {
+        section = "announcement";
+      }
+      handler?.(
+        { html: html, forumId: Number(parentId) },
+        fileMeta,
+        form,
+        section
+      );
     });
   }
 

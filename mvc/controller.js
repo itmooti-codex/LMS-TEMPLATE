@@ -2,63 +2,143 @@ import { forumMapper } from "../utils/helper.js";
 import { contactMapper } from "../utils/helper.js";
 import { hideLoader } from "../utils/helper.js";
 import { tributObj } from "../utils/helper.js";
+import { courseMapper } from "../utils/helper.js";
+import { announcementMapper } from "../utils/helper.js";
 
 export class AWCController {
   constructor(model, view) {
     this.model = model;
     this.view = view;
-    this.currentAuthorId = "92";
+    this.currentAuthorId = "62";
     this.myForumPosts = [];
     this.allForumPosts = [];
+    this.enrolmentId = Number(window.enrolmentId ?? 1);
+    this.modules = [];
+    this.progressState = {
+      enrolmentId: this.enrolmentId,
+      lastLessonId: null,
+      inProgressLessonIds: [],
+      completedLessonIds: [],
+      lessonUrlMap: {},
+    };
+    this.boundCrossWindowHandler = (event) =>
+      this.handleCrossWindowMessage(event);
+    window.addEventListener("message", this.boundCrossWindowHandler);
     this.initialListners();
-    this.contentRendered = false;
-    this.announcementsRendered = false;
   }
 
   initialListners() {
     const setupNav = () => {
-      const sections = document.querySelectorAll("#main-content > div");
-      const links = document.querySelectorAll("a[data-target]");
+      // Cache DOM references and build maps once
+      const sections = Array.from(
+        document.querySelectorAll("#main-content > div")
+      );
+      const links = Array.from(document.querySelectorAll("a[data-target]"));
+      const nav = document.querySelector("nav");
+      const navLinks = Array.from(
+        nav?.querySelectorAll("a[data-target]") || []
+      );
 
+      const sectionsById = new Map(sections.map((s) => [s.id, s]));
+      const linkById = new Map(links.map((l) => [l.dataset.target, l]));
+      const navLinkById = new Map(navLinks.map((l) => [l.dataset.target, l]));
+      const routeById = new Map(
+        Array.from(sectionsById.keys()).map((id) => [
+          id,
+          id.replace(/-section$/i, ""),
+        ])
+      );
+      const idByRoute = new Map(
+        Array.from(routeById.entries()).map(([id, route]) => [
+          route.toLowerCase(),
+          id,
+        ])
+      );
+
+      let currentId =
+        sections.find((sec) => !sec.classList.contains("hidden"))?.id || null;
+
+      const setActiveSection = (targetId) => {
+        if (!targetId || currentId === targetId) return;
+        const prevId = currentId;
+        currentId = targetId;
+
+        const prevSection = prevId ? sectionsById.get(prevId) : null;
+        const nextSection = sectionsById.get(targetId);
+        if (prevSection) prevSection.classList.add("hidden");
+        if (nextSection) nextSection.classList.remove("hidden");
+
+        const prevLink = prevId ? navLinkById.get(prevId) : null;
+        if (prevLink)
+          prevLink.classList.remove("text-sky-600", "font-semibold");
+        const nextLink = navLinkById.get(targetId);
+        if (nextLink) nextLink.classList.add("text-sky-600", "font-semibold");
+      };
+
+      const idToRoute = (id) => routeById.get(id) || "";
+      const routeToId = (route) =>
+        idByRoute.get((route || "").toLowerCase()) || null;
+
+      const updateUrlParam = (route, replace = false) => {
+        const url = new URL(window.location.href);
+        if (route) url.searchParams.set("section", route);
+        else url.searchParams.delete("section");
+        const newUrl = `${url.pathname}${url.search}${url.hash}`;
+        if (replace) history.replaceState({}, "", newUrl);
+        else history.pushState({}, "", newUrl);
+      };
+
+      const navigateTo = (
+        targetId,
+        { update = true, replace = false } = {}
+      ) => {
+        if (!targetId || currentId === targetId) return;
+        setActiveSection(targetId);
+        if (update) {
+          const route = idToRoute(targetId);
+          if (route) updateUrlParam(route, replace);
+        }
+      };
+
+      // Stable default (overview/first tab)
+      const defaultId = navLinks[0]?.dataset.target || sections[0]?.id;
+
+      // Wire link clicks and set hrefs for deep links (?section=...)
       links.forEach((link) => {
+        const targetId = link.dataset.target;
+        const route = idToRoute(targetId);
+        if (route) link.setAttribute("href", `?section=${route}`);
         link.addEventListener("click", (e) => {
           e.preventDefault();
-          sections.forEach((sec) => sec.classList.add("hidden"));
-          const targetId = link.dataset.target;
-          const targetSection = document.getElementById(targetId);
-
-          if (targetSection) targetSection.classList.remove("hidden");
-
-          links.forEach((l) =>
-            l.classList.remove("text-sky-600", "font-semibold")
-          );
-          link.classList.add("text-sky-600", "font-semibold");
-
-          // Render dynamic course content when navigating to Content section
-          if (targetId === "content-section" && !this.contentRendered) {
-            const modules = this.buildRandomModules();
-            this.view.renderContentModules(modules);
-            this.contentRendered = true;
-          }
-
-          // Render announcements when navigating to Announcements
-          if (targetId === "announcements-section" && !this.announcementsRendered) {
-            const data = this.buildRandomAnnouncements();
-            this.view.renderAnnouncements(data);
-            this.setupAnnouncementsTabs(data);
-            this.announcementsRendered = true;
+          if (targetId && targetId !== currentId) {
+            navigateTo(targetId, { update: true, replace: false });
           }
         });
       });
 
-      // If content-section is already visible on load, render immediately.
-      const contentSection = document.getElementById("content-section");
-      const isHidden = contentSection?.classList?.contains("hidden");
-      if (!isHidden && !this.contentRendered) {
-        const modules = this.buildRandomModules();
-        this.view.renderContentModules(modules);
-        this.contentRendered = true;
+      // Handle initial route via query param and subsequent history navigation
+      const resolveInitial = () => {
+        const url = new URL(window.location.href);
+        const raw = (url.searchParams.get("section") || "").toLowerCase();
+        const fromQuery = routeToId(raw);
+        if (fromQuery) return { id: fromQuery, valid: true };
+        return { id: defaultId, valid: false };
+      };
+
+      const { id: initialId, valid } = resolveInitial();
+      if (initialId !== currentId) {
+        navigateTo(initialId, { update: !valid, replace: true });
+      } else if (!valid) {
+        const route = idToRoute(initialId);
+        if (route) updateUrlParam(route, true);
       }
+
+      window.addEventListener("popstate", () => {
+        const url = new URL(window.location.href);
+        const raw = (url.searchParams.get("section") || "").toLowerCase();
+        const targetId = routeToId(raw) || defaultId;
+        if (targetId !== currentId) setActiveSection(targetId);
+      });
     };
 
     if (document.readyState === "loading") {
@@ -68,124 +148,9 @@ export class AWCController {
     }
   }
 
-  buildRandomModules() {
-    const titles = [
-      "Start here",
-      "Key elements and characters",
-      "A child's point of view",
-      "Write magnetic beginnings",
-      "How to structure your story",
-    ];
-    const descriptions = [
-      "In this module, you’ll discover more about the children’s novel and how it fits into publishing for children. We’ll look at what makes writing for this…",
-      "Voice is the beginning of point of view, but there’s a lot more to it. This module looks at how point of view works – including how to avoid…",
-      "You need to grab the attention of young readers from the first page with character, stakes and questions that pull them in.",
-      "Once the story is up and running, it’s all about character, plot and pace. We’ll look at how to manipulate each of…",
-    ];
-    const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-
-    const modules = [];
-    modules.push({
-      isFirst: true,
-      index: 1,
-      title: `TEST2 ${titles[0]}`,
-      time: `${rand(2, 6)} min`,
-      units: rand(1, 3),
-      lessonTitle: "Welcome to your course",
-      lessonTime: `${rand(2, 5)} min`,
-    });
-    for (let i = 1; i < titles.length; i++) {
-      modules.push({
-        isFirst: false,
-        index: i + 1,
-        title: `TEST2 Module ${i}: ${titles[i]}`,
-        time: `${rand(45, 95)} min`,
-        units: rand(5, 10),
-        description: descriptions[(i - 1) % descriptions.length],
-      });
-    }
-    return modules;
-  }
-
-  buildRandomAnnouncements() {
-    const titles = [
-      "Welcome to the course!",
-      "New resources available this week",
-      "Live Q&A session announced",
-      "Assignment tips and best practices",
-      "Module update: structure tweaks",
-    ];
-    const summary = [
-      "We’re excited to have you on board. Here’s how to get started and make the most of the course.",
-      "We’ve added extra reading and downloadable templates to support your writing.",
-      "Join us for a live Q&A to discuss plot, pacing and character arcs.",
-      "Some practical advice to approach your first assignment and common pitfalls to avoid.",
-      "We’ve refined the order and pacing of content in this module for clarity.",
-    ];
-    const authors = ["A. Instructor", "Course Team", "Support", "T. Mentor"]; 
-    const cats = ["General", "Resources", "Event", "Assignment", "Update"];
-    const attachments = [
-      { name: "Schedule.pdf", url: "#" },
-      { name: "Template.docx", url: "#" },
-    ];
-    const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-    const pad = (n) => String(n).padStart(2, "0");
-    const today = new Date();
-
-    const items = Array.from({ length: 4 }).map((_, i) => {
-      const d = new Date(today);
-      d.setDate(today.getDate() - rand(0, 14));
-      const comments = Array.from({ length: rand(0, 2) }).map((__, ci) => {
-        return {
-          id: `${i + 1}-${ci + 1}`,
-          author: authors[(i + ci) % authors.length],
-          published: `${rand(1, 5)} hrs ago`,
-          text: ci % 2 ? "Reply to test" : "Thanks for the update!",
-          votes: rand(0, 3),
-        };
-      });
-      return {
-        id: String(i + 1),
-        title: titles[i % titles.length],
-        date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
-        time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
-        author: authors[i % authors.length],
-        badge: i % 3 === 0 ? "New" : "Announcement",
-        summary: summary[i % summary.length],
-        category: cats[i % cats.length],
-        attachments: i % 2 === 0 ? attachments.slice(0, 1) : [],
-        authorId: (90 + i).toString(),
-        votes: rand(0, 6),
-        Comment: comments,
-      };
-    });
-    return items;
-  }
-
-  setupAnnouncementsTabs(allItems) {
-    const allBtn = document.getElementById("all-posts-tab");
-    const myBtn = document.getElementById("my-posts-tab");
-    if (!allBtn || !myBtn) return;
-    const myItems = allItems.filter((a) => a.authorId === this.currentAuthorId);
-
-    const activate = (btn, other) => {
-      btn.classList.add("activePostTab");
-      other.classList.remove("activePostTab");
-    };
-
-    allBtn.addEventListener("click", () => {
-      this.view.renderAnnouncements(allItems);
-      activate(allBtn, myBtn);
-    });
-    myBtn.addEventListener("click", () => {
-      this.view.renderAnnouncements(myItems);
-      activate(myBtn, allBtn);
-    });
-  }
-
   async init() {
     try {
-      this.model.onData((records) => {
+      this.model.onPostData((records) => {
         try {
           this.allForumPosts = forumMapper(records);
           this.myForumPosts = this.allForumPosts?.filter(
@@ -200,22 +165,244 @@ export class AWCController {
           this.view.disableHTML(element, "enable");
         }
       });
+
+      this.model.onAnnouncementData((records) => {
+        let x = announcementMapper(records);
+        this.view.renderAnnouncement(x);
+      });
+
+      this.model.onCourseData(async (records) => {
+        try {
+          const { courseName, modules } = courseMapper(records);
+          this.modules = Array.isArray(modules) ? modules : [];
+          this.view.updateCourseHeader(courseName);
+          await this.refreshProgressState({ modules: this.modules });
+        } catch (err) {
+          console.error("Error preparing course data:", err);
+        }
+      });
+
+      this.view.registerLessonActionHandler((payload) =>
+        this.handleLessonLaunch(payload)
+      );
+      this.view.registerBannerActionHandler((payload) =>
+        this.handleBannerLaunch(payload)
+      );
+
       await this.model.init();
-      this.wireEvents();
+      this.wirePostEvents();
       await this.tributeHandler();
       this.postsHandler();
-
-      // Pre-render content-section data so it’s ready on first open
-      if (!this.contentRendered) {
-        const modules = this.buildRandomModules();
-        this.view.renderContentModules(modules);
-        this.contentRendered = true;
-      }
     } catch (err) {
       console.error("Error initializing ForumController:", err);
     } finally {
       hideLoader();
     }
+  }
+
+  async refreshProgressState({ modules = this.modules } = {}) {
+    if (Array.isArray(modules)) this.modules = modules;
+    try {
+      const progress = await this.model.fetchEnrolmentProgress(
+        this.enrolmentId
+      );
+      this.progressState = this.augmentProgressData(progress);
+      this.view.renderCourseContent({
+        modules: this.modules,
+        progress: this.progressState,
+      });
+      this.view.updateResumeBanner(this.progressState);
+    } catch (err) {
+      console.error("Error refreshing enrolment progress:", err);
+    }
+  }
+
+  augmentProgressData(progress = {}) {
+    const cleaned = {
+      enrolmentId: progress?.enrolmentId ?? this.enrolmentId ?? null,
+      lastLessonId:
+        progress?.lastLessonId != null ? Number(progress.lastLessonId) : null,
+      inProgressLessonIds: Array.isArray(progress?.inProgressLessonIds)
+        ? progress.inProgressLessonIds.map((id) => Number(id))
+        : [],
+      completedLessonIds: Array.isArray(progress?.completedLessonIds)
+        ? progress.completedLessonIds.map((id) => Number(id))
+        : [],
+      lessonUrlMap: {},
+      resumeLessonName: "",
+      resumeModuleName: "",
+      resumeUrl: "",
+    };
+
+    const inProgressSet = new Set(cleaned.inProgressLessonIds);
+    const completedSet = new Set(cleaned.completedLessonIds);
+
+    for (const module of this.modules || []) {
+      const lessons = Array.isArray(module?.lessons) ? module.lessons : [];
+      for (const lesson of lessons) {
+        const lessonId = Number(lesson?.id);
+        if (!lessonId) continue;
+        const preparedUrl = this.buildLessonUrl(
+          lesson?.lesson_template_url,
+          lessonId
+        );
+        cleaned.lessonUrlMap[lessonId] = preparedUrl;
+
+        if (cleaned.lastLessonId && lessonId === cleaned.lastLessonId) {
+          cleaned.resumeLessonName = lesson?.lesson_name ?? "";
+          cleaned.resumeModuleName = module?.module_name ?? "";
+          cleaned.resumeUrl = preparedUrl;
+          inProgressSet.add(lessonId);
+        }
+      }
+    }
+
+    cleaned.inProgressLessonIds = Array.from(inProgressSet);
+    cleaned.completedLessonIds = Array.from(completedSet);
+
+    if (!cleaned.resumeUrl) {
+      const fallback = this.getFirstLesson();
+      if (fallback.lesson && fallback.module) {
+        const lessonId = Number(fallback.lesson.id);
+        if (lessonId) {
+          cleaned.resumeUrl = this.buildLessonUrl(
+            fallback.lesson.lesson_template_url,
+            lessonId
+          );
+          cleaned.resumeLessonName = fallback.lesson.lesson_name ?? "";
+          cleaned.resumeModuleName = fallback.module.module_name ?? "";
+        }
+      }
+    }
+
+    return cleaned;
+  }
+
+  buildLessonUrl(baseUrl, lessonId) {
+    let sourceUrl = baseUrl;
+    if (!sourceUrl) {
+      const { lesson } = this.getLessonById(lessonId);
+      sourceUrl = lesson?.lesson_template_url ?? "";
+      if (!sourceUrl) return "";
+    }
+    try {
+      const url = new URL(sourceUrl, window.location.href);
+      if (lessonId != null) url.searchParams.set("lessonId", String(lessonId));
+      if (this.enrolmentId) {
+        url.searchParams.set("enrolmentId", String(this.enrolmentId));
+      }
+      return url.href;
+    } catch (err) {
+      const params = new URLSearchParams();
+      if (lessonId != null) params.set("lessonId", String(lessonId));
+      if (this.enrolmentId) params.set("enrolmentId", String(this.enrolmentId));
+      const separator = sourceUrl.includes("?") ? "&" : "?";
+      return `${sourceUrl}${separator}${params.toString()}`;
+    }
+  }
+
+  getFirstLesson() {
+    for (const module of this.modules || []) {
+      const lessons = Array.isArray(module?.lessons) ? module.lessons : [];
+      if (lessons.length) {
+        return { lesson: lessons[0], module };
+      }
+    }
+    return { lesson: null, module: null };
+  }
+
+  getLessonById(lessonId) {
+    const targetId = Number(lessonId);
+    if (!targetId) return { lesson: null, module: null };
+    for (const module of this.modules || []) {
+      const lessons = Array.isArray(module?.lessons) ? module.lessons : [];
+      const lesson = lessons.find((item) => Number(item?.id) === targetId);
+      if (lesson) return { lesson, module };
+    }
+    return { lesson: null, module: null };
+  }
+
+  handleCrossWindowMessage(event) {
+    const payload = event?.data;
+    if (!payload || typeof payload !== "object") return;
+    const targetEnrolment =
+      payload.enrolmentId != null ? Number(payload.enrolmentId) : null;
+    if (targetEnrolment && targetEnrolment !== this.enrolmentId) return;
+
+    const type = payload.type;
+    if (
+      type === "lesson-completed" ||
+      type === "lesson-progress-updated" ||
+      type === "lesson-state-refresh"
+    ) {
+      this.refreshProgressState();
+    }
+  }
+
+  async handleLessonLaunch({ event, lessonId, url, lessonStatus } = {}) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    const id = Number(lessonId);
+    if (!id) return;
+
+    const launchUrl =
+      url ||
+      this.progressState.lessonUrlMap?.[id] ||
+      this.buildLessonUrl(null, id);
+    const sanitizedUrl = launchUrl && launchUrl !== "#" ? launchUrl : null;
+    const popup = sanitizedUrl
+      ? window.open(sanitizedUrl, "_blank", "noopener")
+      : null;
+
+    try {
+      const tasks = [
+        this.model.updateEnrolmentLastLesson({
+          enrolmentId: this.enrolmentId,
+          lessonId: id,
+        }),
+      ];
+      const alreadyInProgress = this.progressState.inProgressLessonIds.some(
+        (current) => Number(current) === id
+      );
+      if (!alreadyInProgress) {
+        tasks.push(
+          this.model.markLessonInProgress({
+            enrolmentId: this.enrolmentId,
+            lessonId: id,
+          })
+        );
+      }
+      await Promise.all(tasks);
+    } catch (err) {
+      console.error("Error updating enrolment progress:", err);
+    } finally {
+      await this.refreshProgressState();
+      if (popup && !popup.closed && sanitizedUrl) {
+        try {
+          popup.location.replace(sanitizedUrl);
+        } catch (err) {
+          // ignore cross-origin navigation errors
+        }
+      } else if (!popup && sanitizedUrl) {
+        window.open(sanitizedUrl, "_blank", "noopener");
+      }
+    }
+  }
+
+  async handleBannerLaunch({ event, lessonId, url } = {}) {
+    if (!Array.isArray(this.modules) || this.modules.length === 0) return;
+    const explicitLessonId = Number(lessonId);
+    const bannerLessonId = explicitLessonId || this.progressState.lastLessonId;
+    const id =
+      bannerLessonId || Number(this.getFirstLesson().lesson?.id ?? null);
+    if (!id) return;
+    const launchUrl =
+      url ||
+      this.progressState.lessonUrlMap?.[id] ||
+      this.buildLessonUrl(null, id);
+    await this.handleLessonLaunch({ event, lessonId: id, url: launchUrl });
   }
 
   async tributeHandler() {
@@ -242,7 +429,7 @@ export class AWCController {
     }
   }
 
-  wireEvents() {
+  wirePostEvents() {
     this.view.onCreatePost(async ({ copy, fileMeta }, element) => {
       if (!copy) copy = "";
       try {
@@ -271,7 +458,7 @@ export class AWCController {
     });
 
     this.view.onUpvote(async (payload) => {
-      let { type, postId, commentId, element } = payload;
+      let { type, postId, commentId, element, section } = payload;
       try {
         this.view.disableHTML(element, "disable");
 
@@ -286,6 +473,7 @@ export class AWCController {
             let result = await this.model.createVote({
               Forum_Reactor_ID: this.currentAuthorId,
               Reacted_to_Forum_ID: postId,
+              section: section,
             });
             if (result?.isCancelling) {
               console.log("Error while voting the record");
@@ -294,7 +482,7 @@ export class AWCController {
             console.log("Post has been voted");
             this.view.applyUpvoteStyles(postId, voteId);
           } else {
-            let result = await this.model.deleteVote(voteId);
+            let result = await this.model.deleteVote(voteId, section);
             if (result.isCancelling) {
               console.log("Error while deleting the vote of the record");
               return;
@@ -311,7 +499,8 @@ export class AWCController {
           if (!voteId) {
             let result = await this.model.createCommentUpvote(
               commentId,
-              this.currentAuthorId
+              this.currentAuthorId,
+              section
             );
             if (result?.isCancelling) {
               console.log("Error while voting the record");
@@ -320,7 +509,10 @@ export class AWCController {
             console.log("Post has been voted");
             this.view.applyUpvoteStyles(postId, voteId);
           } else {
-            let result = await this.model.deleteCommentUpvote(Number(voteId));
+            let result = await this.model.deleteCommentUpvote(
+              Number(voteId),
+              section
+            );
             if (result?.isCancelling) {
               console.log("Error while voting the comment");
               return;
@@ -337,7 +529,8 @@ export class AWCController {
           if (!voteId) {
             let result = await this.model.createCommentUpvote(
               commentId,
-              this.currentAuthorId
+              this.currentAuthorId,
+              section
             );
             if (result?.isCancelling) {
               console.log("Error while voting the record");
@@ -346,7 +539,10 @@ export class AWCController {
             console.log("Post has been voted");
             this.view.applyUpvoteStyles(postId, voteId);
           } else {
-            let result = await this.model.deleteCommentUpvote(Number(voteId));
+            let result = await this.model.deleteCommentUpvote(
+              Number(voteId),
+              section
+            );
             if (result?.isCancelling) {
               console.log("Error while voting the reply");
               return;
@@ -422,21 +618,27 @@ export class AWCController {
       }
     });
 
-    this.view.getCommentValueObj(async (payload, fileMeta, element) => {
-      try {
-        payload.authorId = this.currentAuthorId;
-        let result = await this.model.createComment(payload, fileMeta);
-        if (!result.isCancelling) {
-          console.log("New comment has been created");
-        } else {
-          console.log("Comment creation failed");
+    this.view.getCommentValueObj(
+      async (payload, fileMeta, element, section) => {
+        try {
+          payload.authorId = this.currentAuthorId;
+          let result = await this.model.createComment(
+            payload,
+            fileMeta,
+            section
+          );
+          if (!result.isCancelling) {
+            console.log("New comment has been created");
+          } else {
+            console.log("Comment creation failed");
+          }
+        } catch (err) {
+          console.error("Error creating comment:", err);
+        } finally {
+          this.view.disableHTML(element, "enable");
         }
-      } catch (err) {
-        console.error("Error creating comment:", err);
-      } finally {
-        this.view.disableHTML(element, "enable");
       }
-    });
+    );
 
     this.view.getReplyValueObj(async (payload, metaData, element) => {
       try {
@@ -457,6 +659,8 @@ export class AWCController {
       }
     });
   }
+
+  wireAnnouncementEvents() {}
 
   postsHandler() {
     let myPostBtn = document.getElementById("my-posts-tab");
