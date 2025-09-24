@@ -5,6 +5,8 @@ export class AWCView {
     this.postTextarea = document.getElementById(postTextareaId);
     this.postButton = document.getElementById(postButtonId);
     this.templateName = "PostTemplate";
+    this.contentTemplateName = "ContentModulesTemplate";
+    this.announcementTemplateName = "AnnouncementTemplate";
     this.model = model;
     this.__activePreviewURLs = new WeakMap();
     this.init();
@@ -12,6 +14,8 @@ export class AWCView {
 
   init() {
     this.ensureTemplate();
+    this.ensureContentTemplate();
+    this.ensureAnnouncementTemplate();
     this.autoResizePostTextarea();
     this.mount.addEventListener("click", (e) => {
       const t = e.target.closest(".actionToggleButton");
@@ -25,6 +29,371 @@ export class AWCView {
     this.attachFileBtnHandler();
     this.deleteAttachFileHandler();
     this.implementToolbarEffect();
+  }
+
+  ensureAnnouncementTemplate() {
+    if ($.templates[this.announcementTemplateName]) return;
+    const tmpl = `
+      <article class="bg-white rounded-lg shadow-sm ring-1 ring-slate-200 p-4 md:p-5">
+        <header class="flex items-start justify-between gap-4">
+          <div class="min-w-0">
+            <h3 class="text-lg md:text-xl font-semibold text-slate-800 truncate">{{:title}}</h3>
+            <div class="mt-1 flex items-center gap-3 text-slate-500 text-sm">
+              <span class="inline-flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 2A1.5 1.5 0 0 0 5 3.5V4H4a2 2 0 0 0-2 2v13a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3V6a2 2 0 0 0-2-2h-1v-.5A1.5 1.5 0 0 0 17.5 2 1.5 1.5 0 0 0 16 3.5V4H8v-.5A1.5 1.5 0 0 0 6.5 2zM20 9H4v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1z"/></svg>
+                <span>{{:date}}</span>
+              </span>
+              <span class="inline-flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 1 0 7 7 7.008 7.008 0 0 0-7-7Zm.75 7.438V6.5a.75.75 0 0 0-1.5 0v3.25a.75.75 0 0 0 .22.53l2.25 2.25a.75.75 0 1 0 1.06-1.06Z"/></svg>
+                <span>{{:time}}</span>
+              </span>
+              <span class="inline-flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 1 0-5-5 5.006 5.006 0 0 0 5 5Zm0 2c-3.33 0-10 1.67-10 5v1a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1v-1c0-3.33-6.67-5-10-5Z"/></svg>
+                <span class="truncate">{{:author}}</span>
+              </span>
+            </div>
+          </div>
+          <span class="shrink-0 inline-flex items-center rounded-full bg-teal-50 text-teal-700 text-xs font-semibold px-2 py-1 border border-teal-200">{{:badge || 'Announcement'}}</span>
+        </header>
+
+        <div class="mt-3 text-slate-700 leading-relaxed">
+          {{:summary}}
+        </div>
+
+        {{if attachments && attachments.length}}
+        <div class="mt-3 flex flex-wrap gap-2">
+          {{for attachments}}
+            <a href="{{:url}}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-sm px-3 py-1 rounded border border-slate-200 hover:bg-slate-50">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M9 17a5 5 0 0 1 0-10h8a3 3 0 0 1 0 6H9a1 1 0 0 1 0-2h8a1 1 0 0 0 0-2H9a3 3 0 0 0 0 6h8a5 5 0 0 0 0-10H9a7 7 0 0 0 0 14h8a7 7 0 0 0 0-14H9"/></svg>
+              <span class="truncate max-w-[12rem]">{{:name}}</span>
+            </a>
+          {{/for}}
+        </div>
+        {{/if}}
+
+        <footer class="mt-4 flex items-center justify-between">
+          <div class="text-slate-500 text-sm">{{:category || 'General'}}</div>
+          <a href="#" class="text-teal-700 hover:text-teal-800 text-sm font-semibold">Read more →</a>
+        </footer>
+
+        <div class="mt-3 flex items-center gap-4">
+          <button class="roundedButton {{:votes ? 'is-voted' : ''}}" data-action="ann-upvote" data-ann-id="{{:id}}" data-vote-count="{{:votes}}">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="#007C8F" xmlns="http://www.w3.org/2000/svg"><path d="M14.3092 5.81653C14.1751 5.66459 14.0103 5.54291 13.8255 5.45958C13.6408 5.37625 13.4405 5.33318 13.2378 5.33322H9.90462V4.38087C9.90462 3.74942 9.65378 3.14384 9.20728 2.69734C8.76079 2.25084 8.1552 2 7.52376 2C7.43529 1.99994 7.34856 2.02452 7.27329 2.07099C7.19801 2.11746 7.13717 2.18397 7.09758 2.26309L4.84885 6.76174H2.28584C2.03327 6.76174 1.79103 6.86207 1.61243 7.04067C1.43383 7.21927 1.3335 7.46151 1.3335 7.71409V12.952C1.3335 13.2046 1.43383 13.4468 1.61243 13.6254C1.79103 13.804 2.03327 13.9043 2.28584 13.9043H12.5236C12.8716 13.9045 13.2077 13.7775 13.4688 13.5474C13.7298 13.3172 13.8979 12.9997 13.9414 12.6544L14.6557 6.9403C14.681 6.73913 14.6632 6.53488 14.6034 6.34112C14.5437 6.14736 14.4434 5.96854 14.3092 5.81653ZM2.28584 7.71409H4.66671V12.952H2.28584V7.71409Z"/></svg>
+            <p class="text-label vote-count">{{:votes}}</p>
+          </button>
+          <div class="text-[#007b8e] text-label cursor-pointer" data-action="ann-toggle-reply" data-ann-id="{{:id}}">Reply</div>
+        </div>
+
+        <div id="ann-comments-{{:id}}" class="mt-4 space-y-3">
+          {{for Comment}}
+          <div class="p-4 bg-slate-100 rounded">
+            <div class="flex items-center gap-2 text-slate-600 text-sm">
+              <span class="font-semibold">{{:author}}</span>
+              <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+              <span>{{:published}}</span>
+            </div>
+            <div class="mt-2 text-slate-700">{{:text}}</div>
+            <div class="mt-3 flex items-center gap-4">
+              <button class="roundedButton" data-action="ann-comment-upvote" data-ann-comment-id="{{:id}}">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="#007C8F" xmlns="http://www.w3.org/2000/svg"><path d="M14.3092 5.81653C14.1751 5.66459 14.0103 5.54291 13.8255 5.45958C13.6408 5.37625 13.4405 5.33318 13.2378 5.33322H9.90462V4.38087C9.90462 3.74942 9.65378 3.14384 9.20728 2.69734C8.76079 2.25084 8.1552 2 7.52376 2C7.43529 1.99994 7.34856 2.02452 7.27329 2.07099C7.19801 2.11746 7.13717 2.18397 7.09758 2.26309L4.84885 6.76174H2.28584C2.03327 6.76174 1.79103 6.86207 1.61243 7.04067C1.43383 7.21927 1.3335 7.46151 1.3335 7.71409V12.952C1.3335 13.2046 1.43383 13.4468 1.61243 13.6254C1.79103 13.804 2.03327 13.9043 2.28584 13.9043H12.5236C12.8716 13.9045 13.2077 13.7775 13.4688 13.5474C13.7298 13.3172 13.8979 12.9997 13.9414 12.6544L14.6557 6.9403C14.681 6.73913 14.6632 6.53488 14.6034 6.34112C14.5437 6.14736 14.4434 5.96854 14.3092 5.81653ZM2.28584 7.71409H4.66671V12.952H2.28584V7.71409Z"/></svg>
+                <div class="text-label vote-count">{{:votes}}</div>
+              </button>
+              <div class="text-[#007b8e] text-label cursor-pointer" data-action="ann-comment-reply" data-ann-comment-id="{{:id}}">Reply</div>
+            </div>
+          </div>
+          {{/for}}
+        </div>
+
+        <form id="ann-reply-form-{{:id}}" class="mt-3 ann-reply-form hidden" data-ann-id="{{:id}}">
+          <div class="containerForToolbar mb-2">
+            <div class="flex flex-wrap items-center gap-2 bg-white border border-gray-300 rounded p-2 shadow">
+              <button type="button" class="px-2 py-1 rounded hover:bg-gray-200" title="Bold">𝐁</button>
+              <button type="button" class="px-2 py-1 rounded hover:bg-gray-200" title="Italic">𝐼</button>
+              <button type="button" class="px-2 py-1 rounded hover:bg-gray-200" title="Underline">U̲</button>
+              <button type="button" class="px-2 py-1 rounded hover:bg-gray-200" title="Add Link">🔗</button>
+            </div>
+          </div>
+          <div class="post-input">
+            <div contenteditable="true" class="ann-reply-editor" placeholder="Write a reply..."></div>
+          </div>
+          <div class="mt-2 flex items-center gap-2 justify-end">
+            <button class="post px-4 py-2" data-action="ann-reply-submit">Post Reply</button>
+          </div>
+        </form>
+      </article>`;
+    $.templates(this.announcementTemplateName, tmpl);
+  }
+
+  renderAnnouncements(items) {
+    if (!Array.isArray(items)) return;
+    const container = document.getElementById("announcementsList");
+    if (!container) return;
+    const html = $.render[this.announcementTemplateName](items);
+    container.innerHTML = html;
+    this.bindAnnouncementInteractions();
+  }
+
+  bindAnnouncementInteractions() {
+    const root = document.getElementById("announcementsList");
+    if (!root) return;
+
+    root.addEventListener("click", (e) => {
+      const btn = e.target.closest('[data-action="ann-upvote"]');
+      if (!btn) return;
+      const countEl = btn.querySelector(".vote-count");
+      let count = Number(btn.getAttribute("data-vote-count") || 0);
+      const voted = btn.classList.toggle("is-voted");
+      count = voted ? count + 1 : Math.max(0, count - 1);
+      btn.setAttribute("data-vote-count", String(count));
+      if (countEl) countEl.textContent = String(count);
+    });
+
+    root.addEventListener("click", (e) => {
+      const t = e.target.closest('[data-action="ann-toggle-reply"]');
+      if (!t) return;
+      const id = t.getAttribute("data-ann-id");
+      const form = document.getElementById(`ann-reply-form-${id}`);
+      if (form) form.classList.toggle("hidden");
+      this.implementToolbarEffect();
+    });
+
+    root.addEventListener("click", (e) => {
+      const t = e.target.closest('[data-action="ann-reply-submit"]');
+      if (!t) return;
+      e.preventDefault();
+      const form = t.closest(".ann-reply-form");
+      const id = form?.getAttribute("data-ann-id");
+      const editor = form?.querySelector(".ann-reply-editor");
+      const text = (editor?.innerHTML || "").trim();
+      if (!text) return;
+      const list = document.getElementById(`ann-comments-${id}`);
+      const node = document.createElement("div");
+      node.className = "p-4 bg-slate-100 rounded";
+      node.innerHTML = `
+        <div class=\"flex items-center gap-2 text-slate-600 text-sm\"> 
+          <span class=\"font-semibold\">You</span>
+          <span class=\"w-1 h-1 rounded-full bg-slate-300\"></span>
+          <span>just now</span>
+        </div>
+        <div class=\"mt-2 text-slate-700\">${text}</div>
+        <div class=\"mt-3 flex items-center gap-4\">
+          <button class=\"roundedButton\" data-action=\"ann-comment-upvote\" data-ann-comment-id=\"temp-${Date.now()}\"> 
+            <svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"#007C8F\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M14.3092 5.81653C14.1751 5.66459 14.0103 5.54291 13.8255 5.45958C13.6408 5.37625 13.4405 5.33318 13.2378 5.33322H9.90462V4.38087C9.90462 3.74942 9.65378 3.14384 9.20728 2.69734C8.76079 2.25084 8.1552 2 7.52376 2C7.43529 1.99994 7.34856 2.02452 7.27329 2.07099C7.19801 2.11746 7.13717 2.18397 7.09758 2.26309L4.84885 6.76174H2.28584C2.03327 6.76174 1.79103 6.86207 1.61243 7.04067C1.43383 7.21927 1.3335 7.46151 1.3335 7.71409V12.952C1.3335 13.2046 1.43383 13.4468 1.61243 13.6254C1.79103 13.804 2.03327 13.9043 2.28584 13.9043H12.5236C12.8716 13.9045 13.2077 13.7775 13.4688 13.5474C13.7298 13.3172 13.8979 12.9997 13.9414 12.6544L14.6557 6.9403C14.681 6.73913 14.6632 6.53488 14.6034 6.34112C14.5437 6.14736 14.4434 5.96854 14.3092 5.81653ZM2.28584 7.71409H4.66671V12.952H2.28584V7.71409Z\"/></svg>
+            <div class=\"text-label vote-count\">0</div>
+          </button>
+          <div class=\"text-[#007b8e] text-label cursor-pointer\" data-action=\"ann-comment-reply\">Reply</div>
+        </div>`;
+      list?.appendChild(node);
+      if (editor) editor.innerHTML = "";
+      form?.classList.add("hidden");
+    });
+
+    root.addEventListener("click", (e) => {
+      const btn = e.target.closest('[data-action=\"ann-comment-upvote\"]');
+      if (!btn) return;
+      const countEl = btn.querySelector(".vote-count");
+      let count = Number((countEl?.textContent || "0").trim());
+      const voted = btn.classList.toggle("is-voted");
+      count = voted ? count + 1 : Math.max(0, count - 1);
+      if (countEl) countEl.textContent = String(count);
+    });
+  }
+
+  ensureContentTemplate() {
+    if ($.templates[this.contentTemplateName]) return;
+    const tmpl = `
+    {{if isFirst}}
+        <section class="py-6 border-b border-slate-200">
+          <div class="flex flex-col md:flex-row items-start justify-between gap-4 md:gap-7">
+            <div class="flex items-start gap-3 w-full min-w-0 md:min-w-[360px] md:flex-[0_0_460px] pl-4">
+              <div class="flex items-center justify-center w-6 h-6 rounded-md border border-cyan-700 text-cyan-700 shrink-0 mt-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 11V8a4 4 0 1 1 8 0m-9 3h10a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2z" />
+                </svg>
+              </div>
+              <div class="flex flex-col gap-2 min-w-0">
+                <h3 class="text-xl leading-snug">{{:title}}</h3>
+                <a href="#" class="text-teal-700 font-medium hover:underline">Unlocked</a>
+              </div>
+            </div>
+            <div class="flex items-center gap-4 flex-wrap">
+              <div class="flex items-center gap-6 text-slate-600">
+                <span class="inline-flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 1.75a10.25 10.25 0 1 0 0 20.5 10.25 10.25 0 0 0 0-20.5Zm.75 5.5a.75.75 0 0 0-1.5 0v5.25c0 .2.08.39.22.53l3.25 3.25a.75.75 0 1 0 1.06-1.06l-3.03-3.03V7.25Z"/>
+                  </svg>
+                  <span class="font-semibold text-slate-700">{{:time}}</span>
+                </span>
+                <span class="inline-flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M4 6.75A1.75 1.75 0 0 1 5.75 5h12.5A1.75 1.75 0 0 1 20 6.75v10.5A1.75 1.75 0 0 1 18.25 19H5.75A1.75 1.75 0 0 1 4 17.25V6.75Zm2 .25v1.5h12V7H6Zm0 3v6.25h12V10H6Z"/>
+                  </svg>
+                  <span class="font-semibold text-slate-700">{{:units}} Units</span>
+                </span>
+              </div>
+              <button class="text-slate-500 hover:text-slate-700" data-action="toggle-module" data-id="{{:index}}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-200 rotate-0" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M6 9.75 12 15l6-5.25" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div id="panel-{{:index}}" class="mt-4 flex flex-col md:flex-row overflow-hidden rounded-lg shadow-sm ring-1 ring-black/5">
+            <div class="flex w-full md:w-20 items-center justify-center bg-teal-700 text-2xl font-semibold text-white">{{:index}}</div>
+            <div class="flex w-full flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-gradient-to-r from-teal-50 to-teal-50/60 px-6 py-5">
+              <div class="flex min-w-0 items-center gap-4">
+                <span class="inline-block h-5 w-5 rounded-full border-2 border-gray-300"></span>
+                <h3 class="truncate text-xl font-semibold text-gray-900">{{:lessonTitle}}</h3>
+              </div>
+              <div class="flex w-full md:w-auto items-center gap-4 md:gap-6 justify-between md:justify-end flex-wrap">
+                <div class="flex items-center gap-2 text-gray-700">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M3 18v-3a9 9 0 0 1 18 0v3" />
+                    <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3" />
+                    <path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3" />
+                  </svg>
+                  <span class="text-base font-medium">{{:lessonTime}}</span>
+                </div>
+                <button class="inline-flex items-center gap-2 rounded-md bg-teal-700 px-5 py-2.5 text-base font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-2">
+                  Start
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      {{else}}
+        <section class="flex flex-col md:flex-row gap-7 items-start py-6 border-b border-slate-200">
+          <div class="flex items-start gap-3 w-full min-w-0 md:min-w-[360px] md:flex-[0_0_460px] pl-4">
+            <div class="flex items-center justify-center w-6 h-6 rounded-md border border-cyan-700 text-cyan-700 shrink-0 mt-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 11V8a4 4 0 1 1 8 0m-9 3h10a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2z" />
+              </svg>
+            </div>
+            <div class="flex flex-col gap-2 min-w-0">
+              <h3 class="text-xl leading-snug">{{:title}}</h3>
+              <a href="#" class="text-teal-700 font-medium hover:underline">Unlocked</a>
+            </div>
+          </div>
+          <div class="flex flex-1 flex-col md:flex-row items-start justify-between gap-4">
+            <p class="text-slate-600 max-w-full md:max-w-[780px]">{{:description}}</p>
+            <div class="flex items-center gap-4 flex-wrap">
+              <div class="flex items-center gap-6 text-slate-600">
+                <span class="inline-flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 1.75a10.25 10.25 0 1 0 0 20.5 10.25 10.25 0 0 0 0-20.5Zm.75 5.5a.75.75 0 0 0-1.5 0v5.25c0 .2.08.39.22.53l3.25 3.25a.75.75 0 1 0 1.06-1.06l-3.03-3.03V7.25Z"/>
+                  </svg>
+                  <span class="font-semibold text-slate-700">{{:time}}</span>
+                </span>
+                <span class="inline-flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M4 6.75A1.75 1.75 0 0 1 5.75 5h12.5A1.75 1.75 0 0 1 20 6.75v10.5A1.75 1.75 0 0 1 18.25 19H5.75A1.75 1.75 0 0 1 4 17.25V6.75Zm2 .25v1.5h12V7H6Zm0 3v6.25h12V10H6Z"/>
+                  </svg>
+                  <span class="font-semibold text-slate-700">{{:units}} Units</span>
+                </span>
+              </div>
+              <button class="text-slate-500 hover:text-slate-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 rotate-0" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M6 9.75 12 15l6-5.25" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </section>
+      {{else}}
+        <section class="flex flex-col md:flex-row gap-7 items-start py-6 border-b border-slate-200">
+          <div class="flex items-start gap-3 w-full min-w-0 md:min-w-[360px] md:flex-[0_0_460px] pl-4">
+            <div class="flex items-center justify-center w-6 h-6 rounded-md border border-cyan-700 text-cyan-700 shrink-0 mt-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 11V8a4 4 0 1 1 8 0m-9 3h10a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2z" />
+              </svg>
+            </div>
+            <div class="flex flex-col gap-2 min-w-0">
+              <h3 class="text-xl leading-snug">{{:title}}</h3>
+              <a href="#" class="text-teal-700 font-medium hover:underline">Unlocked</a>
+            </div>
+          </div>
+          <div class="flex flex-1 flex-col md:flex-row items-start justify-between gap-4">
+            <p class="text-slate-600 max-w-full md:max-w-[780px]">{{:description}}</p>
+            <div class="flex items-center gap-4 flex-wrap">
+              <div class="flex items-center gap-6 text-slate-600">
+                <span class="inline-flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 1.75a10.25 10.25 0 1 0 0 20.5 10.25 10.25 0 0 0 0-20.5Zm.75 5.5a.75.75 0 0 0-1.5 0v5.25c0 .2.08.39.22.53l3.25 3.25a.75.75 0 1 0 1.06-1.06l-3.03-3.03V7.25Z"/>
+                  </svg>
+                  <span class="font-semibold text-slate-700">{{:time}}</span>
+                </span>
+                <span class="inline-flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M4 6.75A1.75 1.75 0 0 1 5.75 5h12.5A1.75 1.75 0 0 1 20 6.75v10.5A1.75 1.75 0 0 1 18.25 19H5.75A1.75 1.75 0 0 1 4 17.25V6.75Zm2 .25v1.5h12V7H6Zm0 3v6.25h12V10H6Z"/>
+                  </svg>
+                  <span class="font-semibold text-slate-700">{{:units}} Units</span>
+                </span>
+              </div>
+              <button class="text-slate-500 hover:text-slate-700" data-action="toggle-module" data-id="{{:index}}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-transform duration-200 rotate-0" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M6 9.75 12 15l6-5.25" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <!-- Collapsible panel for non-first modules (hidden by default) -->
+          <div id="panel-{{:index}}" class="hidden mt-4 overflow-hidden rounded-lg shadow-sm ring-1 ring-black/5 bg-teal-50/50">
+            <div class="flex items-center justify-between gap-4 px-6 py-5">
+              <div class="flex items-center gap-4 min-w-0">
+                <span class="inline-block h-5 w-5 rounded-full border-2 border-gray-300"></span>
+                <h3 class="truncate text-lg font-semibold text-gray-900">{{:lessonTitle || title}}</h3>
+              </div>
+              <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2 text-gray-700">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M3 18v-3a9 9 0 0 1 18 0v3" />
+                    <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3" />
+                    <path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3" />
+                  </svg>
+                  <span class="text-base font-medium">{{:lessonTime || time}}</span>
+                </div>
+                <button class="inline-flex items-center gap-2 rounded-md bg-teal-700 px-5 py-2.5 text-base font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-2">
+                  Start
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      {{/if}}`;
+    $.templates(this.contentTemplateName, tmpl);
+  }
+
+  renderContentModules(modules) {
+    if (!Array.isArray(modules)) return;
+    const container = document.getElementById("contentModulesList");
+    if (!container) return;
+    const html = $.render[this.contentTemplateName](modules);
+    container.innerHTML = html;
+    this.bindContentModuleToggles();
+  }
+
+  bindContentModuleToggles() {
+    const container = document.getElementById("contentModulesList");
+    if (!container) return;
+    container.addEventListener(
+      "click",
+      (e) => {
+        const btn = e.target.closest('[data-action="toggle-module"]');
+        if (!btn) return;
+        const id = btn.getAttribute("data-id");
+        const panel = document.getElementById(`panel-${id}`);
+        const icon = btn.querySelector("svg");
+        if (panel) panel.classList.toggle("hidden");
+        if (icon) icon.classList.toggle("rotate-180");
+      },
+      { passive: true }
+    );
   }
 
   ensureTemplate() {

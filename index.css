@@ -1,7 +1,17 @@
 body {
   margin: 0 auto;
-  height: 100vh;
-  overflow-y: unset;
+  min-height: 100vh;
+  height: auto;
+  overflow-y: auto;
+}
+
+/* Make media scale on small screens */
+img,
+video,
+svg,
+canvas {
+  max-width: 100%;
+  height: auto;
 }
 
 #renderForms {

@@ -6,6 +6,7 @@ export class AWCModel {
       "EduflowproOForumReactorReactedtoForum"
     );
     window.contactModal = plugin.switchTo("EduflowproContact");
+    window.courseModal = plugin.switchTo("");
     this.limit = 500;
     this.offset = 0;
     this.query = null;
