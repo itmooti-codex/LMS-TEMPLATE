@@ -5,9 +5,9 @@ const button = document.getElementById("complete-lesson-button");
 const feedback = document.getElementById("lesson-complete-feedback");
 const label = button?.querySelector(".button-label");
 
-// Keep completion model logic at module scope
+// --- SDK init caching ---
 const { slug, apiKey } = config;
-let completionModelPromise = null;
+let completionModelPromise;
 
 const getCompletionModel = async () => {
   if (!completionModelPromise) {
@@ -17,55 +17,57 @@ const getCompletionModel = async () => {
       .then((plugin) =>
         plugin.switchTo("EduflowproOEnrolmentLessonCompLessonCompletion")
       )
-      .catch((error) => {
+      .catch((err) => {
         completionModelPromise = null;
-        throw error;
+        throw err;
       });
   }
   return completionModelPromise;
 };
 
+// --- Helpers ---
+const setButtonState = (state, text, addClasses = [], removeClasses = []) => {
+  if (!button || !label) return;
+  button.dataset.state = state;
+  label.textContent = text;
+  button.classList.remove(...removeClasses);
+  button.classList.add(...addClasses);
+  button.disabled = state === "loading" || state === "completed";
+};
+
+const showFeedback = (message, isError = false) => {
+  if (!feedback) return;
+  feedback.textContent = message;
+  feedback.classList.remove("hidden", "text-rose-600");
+  if (isError) feedback.classList.add("text-rose-600");
+};
+
+// --- Context extraction ---
+const params = new URLSearchParams(window.location.search);
+const lessonId = Number(params.get("lessonId"));
+const enrolmentId =
+  Number(params.get("enrolmentId")) ||
+  Number(window.opener?.enrolmentId ?? window.enrolmentId ?? 0) ||
+  0;
+
+if (enrolmentId) window.enrolmentId = enrolmentId;
+if (lessonId) window.lessonId = lessonId;
+
+// --- Main interaction ---
 if (button && label) {
-  const params = new URLSearchParams(window.location.search);
-  const lessonId = Number(params.get("lessonId"));
-  const enrolmentIdFromQuery = Number(params.get("enrolmentId"));
-  const fallbackEnrolment = Number(
-    window.opener?.enrolmentId ?? window.enrolmentId ?? 0
-  );
-  const enrolmentId = enrolmentIdFromQuery || fallbackEnrolment || 0;
-
-  if (enrolmentId) {
-    window.enrolmentId = enrolmentId;
-  }
-
-  if (lessonId) {
-    window.lessonId = lessonId;
-  }
-
   if (!lessonId || !enrolmentId) {
-    label.textContent = "Lesson context unavailable";
-    button.dataset.state = "disabled";
-    button.disabled = true;
-    button.classList.remove("bg-emerald-600", "hover:bg-emerald-500");
-    button.classList.add(
-      "bg-slate-200",
-      "text-slate-500",
-      "cursor-not-allowed"
+    setButtonState(
+      "disabled",
+      "Lesson context unavailable",
+      ["bg-slate-200", "text-slate-500", "cursor-not-allowed"],
+      ["bg-emerald-600", "hover:bg-emerald-500"]
     );
   } else {
     button.addEventListener("click", async () => {
-      const currentState = button.dataset.state;
-      if (currentState === "loading" || currentState === "completed") return;
+      if (["loading", "completed"].includes(button.dataset.state)) return;
 
-      button.dataset.state = "loading";
-      label.textContent = "Marking...";
-      button.disabled = true;
-      button.classList.add("opacity-80", "cursor-wait");
-
-      if (feedback) {
-        feedback.classList.add("hidden");
-        feedback.classList.remove("text-rose-600");
-      }
+      setButtonState("loading", "Marking...", ["opacity-80", "cursor-wait"]);
+      if (feedback) feedback.classList.add("hidden");
 
       try {
         const completionModel = await getCompletionModel();
@@ -74,27 +76,20 @@ if (button && label) {
           Lesson_Completion_ID: lessonId,
           Enrolment_Lesson_Completion_ID: enrolmentId,
         });
-        await mutation.execute(true).toPromise();
+        let result = await mutation.execute(true).toPromise();
 
-        label.textContent = "Lesson completed";
-        button.dataset.state = "completed";
-        button.classList.remove(
-          "bg-emerald-600",
-          "hover:bg-emerald-500",
-          "opacity-80",
-          "cursor-wait"
+        setButtonState(
+          "completed",
+          "Lesson completed",
+          ["bg-emerald-100", "text-emerald-700", "cursor-default"],
+          [
+            "bg-emerald-600",
+            "hover:bg-emerald-500",
+            "opacity-80",
+            "cursor-wait",
+          ]
         );
-        button.classList.add(
-          "bg-emerald-100",
-          "text-emerald-700",
-          "cursor-default"
-        );
-
-        if (feedback) {
-          feedback.textContent =
-            "Lesson marked as complete. You can close this tab.";
-          feedback.classList.remove("hidden");
-        }
+        showFeedback("Lesson marked as complete. You can close this tab.");
 
         try {
           window.opener?.postMessage(
@@ -104,24 +99,21 @@ if (button && label) {
         } catch (postMessageError) {
           console.warn("Unable to notify opener window", postMessageError);
         }
-      } catch (error) {
-        console.error("Failed to mark lesson complete", error);
-        button.dataset.state = "idle";
-        button.disabled = false;
-        button.classList.remove("opacity-80", "cursor-wait");
-        button.classList.add("bg-emerald-600", "hover:bg-emerald-500");
-        label.textContent = "Complete this lesson";
-        if (feedback) {
-          feedback.textContent = "Something went wrong. Please try again.";
-          feedback.classList.remove("hidden");
-          feedback.classList.add("text-rose-600");
-        }
+      } catch (err) {
+        console.error("Failed to mark lesson complete", err);
+        setButtonState(
+          "idle",
+          "Complete this lesson",
+          ["bg-emerald-600", "hover:bg-emerald-500"],
+          ["opacity-80", "cursor-wait"]
+        );
+        showFeedback("Something went wrong. Please try again.", true);
       }
     });
   }
 }
 
-// Always runs regardless of button presence
+// --- Check if already completed ---
 (async function fetchCompletedLesson() {
   try {
     const completionModel = await getCompletionModel();
@@ -129,8 +121,8 @@ if (button && label) {
       .query()
       .deSelectAll()
       .select(["Enrolment_Lesson_Completion_ID", "Lesson_Completion_ID"])
-      .where("enrolment_lesson_completion_id", Number(window.enrolmentId))
-      .andWhere("lesson_completion_id", Number(window.lessonId));
+      .where("Enrolment_Lesson_Completion_ID", Number(window.enrolmentId))
+      .andWhere("Lesson_Completion_ID", Number(window.lessonId));
 
     const payload = await query
       .noDestroy()
@@ -139,19 +131,11 @@ if (button && label) {
       .toPromise();
 
     if (payload) {
-      label.textContent = "Lesson completed";
-      button.dataset.state = "completed";
-      button.disabled = true;
-      button.classList.remove(
-        "bg-emerald-600",
-        "hover:bg-emerald-500",
-        "opacity-80",
-        "cursor-wait"
-      );
-      button.classList.add(
-        "bg-emerald-100",
-        "text-emerald-700",
-        "cursor-default"
+      setButtonState(
+        "completed",
+        "Lesson completed",
+        ["bg-emerald-100", "text-emerald-700", "cursor-default"],
+        ["bg-emerald-600", "hover:bg-emerald-500", "opacity-80", "cursor-wait"]
       );
     }
   } catch (err) {
