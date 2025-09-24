@@ -73,8 +73,8 @@ if (button && label) {
         const completionModel = await getCompletionModel();
         const mutation = completionModel.mutation();
         mutation.createOne({
-          Lesson_Completion_ID: lessonId,
-          Enrolment_Lesson_Completion_ID: enrolmentId,
+          lesson_completion_id: lessonId,
+          enrolment_lesson_completion_id: enrolmentId,
         });
         let result = await mutation.execute(true).toPromise();
 
