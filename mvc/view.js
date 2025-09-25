@@ -409,7 +409,7 @@ export class AWCView {
         <img class="w-6 h-6 rounded-full border border-[#d3d3d3]"
             src="{{:authorImage || 'https://i.ontraport.com/265848.fef288b2e2a570a362d1141a783309d8.JPEG'}}">
         <div class="flex flex-wrap items-center gap-4">
-            <p class="text-xl font-semibold leading-tight mb-2 text-slate-900">{{:author}}</p>
+            <p class="text-xl font-normal leading-tight mb-2 text-slate-900">{{:author}}</p>
             <div class="py-1.5 px-3 bg-[#c7e6e6] rounded-[36px] font-[400] text-[12px] text-[#414042] line-clamp-1">
                 {{:designation}}</div>
             <div class="w-[2px] h-[15px] bg-[#bbbcbb] max-[600px]:hidden"></div>
@@ -520,7 +520,7 @@ export class AWCView {
             <img class="w-6 h-6 rounded-full border border-[#d3d3d3]"
                 src="{{:avatar || 'https://i.ontraport.com/265848.fef288b2e2a570a362d1141a783309d8.JPEG'}}">
             <div class="flex items-center gap-4">
-                <p class="text-xl font-semibold leading-tight mb-2 text-slate-900">{{:author}}</p>
+                <p class="text-xl font-normal leading-tight mb-2 text-slate-900">{{:author}}</p>
                 {{if designation}}
                 <div class="py-1.5 px-3 bg-[#c7e6e6] rounded-[36px] font-400 text-[12px] text-dark line-clamp-1">
                     {{:designation}}</div>
@@ -619,7 +619,7 @@ export class AWCView {
                     <img class="w-6 h-6 rounded-full border border-[#d3d3d3]"
                         src="{{:avatar || 'https://i.ontraport.com/265848.fef288b2e2a570a362d1141a783309d8.JPEG'}}">
                     <div class="flex items-center gap-4">
-                      <p class="text-xl font-semibold leading-tight mb-2 text-slate-900">{{:author}}</p>
+                      <p class="text-xl font-normal leading-tight mb-2 text-slate-900">{{:author}}</p>
                         {{if designation}}
                         <div
                             class="py-1.5 px-3 bg-[#c7e6e6] rounded-[36px] font-400 text-[12px] text-dark line-clamp-1">
