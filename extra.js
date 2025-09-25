@@ -173,6 +173,7 @@ function hideLoader() {
 }
 
 async function getLessonDetailsById(id = lessonId) {
+  id = id.toString();
   if (!id) return null;
   try {
     const lessonModel = await getLessonModel();
@@ -180,7 +181,7 @@ async function getLessonDetailsById(id = lessonId) {
       .query()
       .deSelectAll()
       .select()
-      .where("id", Number(id))
+      .where("id", id)
       .include("Assessment", (child) =>
         child
           .deSelectAll()
