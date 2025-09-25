@@ -3,7 +3,7 @@ import { contactMapper } from "../utils/helper.js";
 import { hideLoader } from "../utils/helper.js";
 import { tributObj } from "../utils/helper.js";
 import { courseMapper } from "../utils/helper.js";
-import { announcementMapper } from "../utils/helper.js";
+// import { announcementMapper } from "../utils/helper.js";
 
 export class AWCController {
   constructor(model, view) {
@@ -12,6 +12,7 @@ export class AWCController {
     this.currentAuthorId = "62";
     this.myForumPosts = [];
     this.allForumPosts = [];
+    this.allAnnouncements = [];
     this.enrolmentId = Number(window.enrolmentId ?? 1);
     this.modules = [];
     this.progressState = {
@@ -154,7 +155,11 @@ export class AWCController {
         try {
           this.allForumPosts = forumMapper(records);
           this.myForumPosts = this.allForumPosts?.filter(
-            (item) => item.authorId == this.currentAuthorId
+            (item) =>
+              item.authorId == this.currentAuthorId && item.forum_type == "Post"
+          );
+          this.allAnnouncements = this.allForumPosts?.filter(
+            (item) => item.forum_type == "Announcement"
           );
           this.view.renderPosts(this.allForumPosts);
           this.view.initAudioPlayers();
@@ -166,10 +171,10 @@ export class AWCController {
         }
       });
 
-      this.model.onAnnouncementData((records) => {
-        let x = announcementMapper(records);
-        this.view.renderAnnouncement(x);
-      });
+      //   this.model.onAnnouncementData((records) => {
+      //     let x = announcementMapper(records);
+      //     this.allAnnouncements = x;
+      //   });
 
       this.model.onCourseData(async (records) => {
         try {
@@ -430,13 +435,14 @@ export class AWCController {
   }
 
   wirePostEvents() {
-    this.view.onCreatePost(async ({ copy, fileMeta }, element) => {
+    this.view.onCreatePost(async ({ copy, fileMeta }, element, forumType) => {
       if (!copy) copy = "";
       try {
         const result = await this.model.createPost({
           authorId: this.currentAuthorId,
           copy,
           fileMeta,
+          forumType,
         });
         if (result?.isCancelling) {
           console.log("Error while creating the records");
@@ -660,21 +666,47 @@ export class AWCController {
     });
   }
 
-  wireAnnouncementEvents() {}
-
   postsHandler() {
     let myPostBtn = document.getElementById("my-posts-tab");
     let allPostBtn = document.getElementById("all-posts-tab");
+    let announcementBtn = document.getElementById("announcements-tab");
+    let createPostSection = document.getElementById("create-post-section");
+    const getRole = () =>
+      String(window.currentloggedinuserDesignation || "Student").toLowerCase();
+
     allPostBtn.classList.add("activeTab");
+    // Ensure create section is visible for forum tabs initially
+    if (createPostSection) createPostSection.style.removeProperty("display");
     myPostBtn.addEventListener("click", () => {
       this.view.renderPosts(this.myForumPosts);
       myPostBtn.classList.add("activeTab");
       allPostBtn.classList.remove("activeTab");
+      announcementBtn.classList.remove("activeTab");
+      // Always visible on forum tabs
+      if (createPostSection) createPostSection.style.removeProperty("display");
     });
     allPostBtn.addEventListener("click", () => {
       this.view.renderPosts(this.allForumPosts);
       allPostBtn.classList.add("activeTab");
       myPostBtn.classList.remove("activeTab");
+      announcementBtn.classList.remove("activeTab");
+      // Always visible on forum tabs
+      if (createPostSection) createPostSection.style.removeProperty("display");
+    });
+    announcementBtn.addEventListener("click", () => {
+      this.view.renderPosts(this.allAnnouncements);
+      announcementBtn.classList.add("activeTab");
+      allPostBtn.classList.remove("activeTab");
+      myPostBtn.classList.remove("activeTab");
+      // Show only for teachers on announcement tab
+      const role = getRole();
+      if (createPostSection) {
+        if (role === "teacher") {
+          createPostSection.style.removeProperty("display");
+        } else {
+          createPostSection.style.setProperty("display", "none");
+        }
+      }
     });
   }
 }

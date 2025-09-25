@@ -1,14 +1,11 @@
 import { uploadAndGetFileLink } from "../utils/upload.js";
 export class AWCView {
   constructor({ mountId, modalRootId, postTextareaId, postButtonId, model }) {
-    this.mount = [
-      document.getElementById(mountId),
-      document.getElementById("announcements-section"),
-    ];
+    this.mount = [document.getElementById(mountId)];
     this.forumtSectionMount = document.getElementById(mountId);
-    this.announcementMountSection = document.getElementById(
-      "announcements-section"
-    );
+    // this.announcementMountSection = document.getElementById(
+    //   "announcements-section"
+    // );
     this.modalRootId = modalRootId;
     this.postTextarea = document.getElementById(postTextareaId);
     this.postButton = document.getElementById(postButtonId);
@@ -795,16 +792,24 @@ export class AWCView {
   }
 
   renderPosts(records) {
-    if (!records || records.length == 0) return;
+    const mount = this.forumtSectionMount;
+    if (!mount) return;
+    if (!records || records.length === 0) {
+      mount.innerHTML = `
+        <div class="bg-white border rounded-xl p-6 shadow-sm text-center text-slate-600">
+          No posts to display.
+        </div>`;
+      return;
+    }
     const html = $.render[this.chatTemplateName](records);
-    if (this.forumtSectionMount) this.forumtSectionMount.innerHTML = html;
+    mount.innerHTML = html;
   }
 
   renderAnnouncement(records) {
     if (!records || records.length == 0) return;
     const html = $.render[this.chatTemplateName](records);
-    if (this.announcementMountSection)
-      this.announcementMountSection.innerHTML = html;
+    // if (this.announcementMountSection)
+    //   this.announcementMountSection.innerHTML = html;
   }
 
   onCreatePost(handler) {
@@ -815,6 +820,13 @@ export class AWCView {
       e.preventDefault();
       const copy = (this.postTextarea?.innerHTML ?? "").trim();
       const fileInput = document.getElementById("postFile");
+      const activeTab = this.findActiveTab();
+      let forumType;
+      if (activeTab == "announcements-tab") {
+        forumType = "Announcement";
+      } else {
+        forumType = "Post";
+      }
       let fileMeta = null;
       if (fileInput && fileInput.files && fileInput.files[0]) {
         const file = fileInput.files[0];
@@ -837,7 +849,7 @@ export class AWCView {
         this.disableHTML(elementToDisable, "enable");
         return;
       }
-      handler?.({ copy, fileMeta }, elementToDisable);
+      handler?.({ copy, fileMeta }, elementToDisable, forumType);
     });
   }
 
@@ -1628,5 +1640,14 @@ export class AWCView {
         // Mark this button as having a listener
         button.dataset.listenerAdded = "true";
       });
+  }
+
+  findActiveTab() {
+    let activeTab = document.querySelector(
+      "#allAnnouncementsContainer .activeTab"
+    );
+    if (!activeTab) return;
+    const active_id = activeTab.id;
+    return active_id;
   }
 }

@@ -1,11 +1,13 @@
 import { config } from "./sdk/config.js";
 import { VitalStatsSDK } from "./sdk/init.js";
+import { showLoader, hideLoader } from "./utils/helper.js";
 
 const button = document.getElementById("complete-lesson-button");
 const feedback = document.getElementById("lesson-complete-feedback");
 const label = button?.querySelector(".button-label");
 
 // --- SDK init caching ---
+showLoader();
 const { slug, apiKey } = config;
 let completionModelPromise;
 
@@ -140,5 +142,7 @@ if (button && label) {
     }
   } catch (err) {
     console.error("Failed to fetch completed lesson", err);
+  } finally {
+    hideLoader();
   }
 })();

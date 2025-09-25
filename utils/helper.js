@@ -8,6 +8,7 @@ export function forumMapper(records) {
     fileLink: item.file_link ?? null,
     fileName: item.file_name ?? null,
     copy: item.copy,
+    forum_type: item.forum_type,
     published_date: item.published_date ?? null,
     published_days_ago: item.published_date
       ? timeAgo(item.published_date)

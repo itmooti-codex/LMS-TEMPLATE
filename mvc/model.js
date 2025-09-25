@@ -53,21 +53,21 @@ export class AWCModel {
     this.courseDataCallback = cb;
   }
 
-  onAnnouncementData(cb) {
-    this.announcementCallback = cb;
-  }
+  // onAnnouncementData(cb) {
+  //   this.announcementCallback = cb;
+  // }
 
   async init() {
     this.buildFetchPostQuery();
     await this.fetchPosts();
     this.buildFetchCourseContentQuery();
     await this.fetchCourseContent();
-    this.buildFetchAnnouncementQuery();
-    await this.fetchAnnouncement();
+    // this.buildFetchAnnouncementQuery();
+    // await this.fetchAnnouncement();
     this.subscribeToPosts();
     this.subscribeToAnnouncement();
     this.setupPostModelSubscription();
-    this.setupAnnouncementModelSubscription();
+    // this.setupAnnouncementModelSubscription();
   }
 
   destroy() {
@@ -109,77 +109,77 @@ export class AWCModel {
     return this.courseQuery;
   }
 
-  buildFetchAnnouncementQuery() {
-    this.announcementQuery = eduflowproAnnouncementModel
-      .query()
-      .deSelectAll()
-      .select([
-        "id",
-        "status",
-        "content",
-        "attachement",
-        "created_at",
-        "disable_comments",
-        "profile_image",
-        "instructor_id",
-      ])
-      .where("class_id", `${parentClassId}`)
-      .andWhere("class_id", Number(parentClassId))
-      .include("Instructor", (q) => {
-        q.deSelectAll().select([
-          "display_name",
-          "first_name",
-          "last_name",
-          "Instructor_Instructor_Image",
-        ]);
-      })
-      .include("Announcement_Reactors_Data", (q) => {
-        q.deSelectAll().select([
-          "id",
-          "announcement_reactor_id",
-          "contact_announcement_reactor_id",
-        ]);
-      })
-      .include("ForumComments", (q) => {
-        q.deSelectAll()
-          .select(["id", "comment"])
-          .include("Member_Comment_Upvotes_Data", (child) =>
-            child.deSelectAll().select(["id"])
-          )
-          .include("Author", (child) =>
-            child.deSelectAll().select(["display_name"])
-          )
-          .include("ForumComments", (child) => {
-            child
-              .deSelectAll()
-              .select(["id", "comment"])
-              .include("Member_Comment_Upvotes_Data", (grand) =>
-                grand.deSelectAll().select(["id"])
-              )
-              .include("Author", (grand) =>
-                grand.deSelectAll().select(["display_name"])
-              );
-          });
-      })
-      .noDestroy();
-  }
+  // buildFetchAnnouncementQuery() {
+  //   this.announcementQuery = eduflowproAnnouncementModel
+  //     .query()
+  //     .deSelectAll()
+  //     .select([
+  //       "id",
+  //       "status",
+  //       "content",
+  //       "attachement",
+  //       "created_at",
+  //       "disable_comments",
+  //       "profile_image",
+  //       "instructor_id",
+  //     ])
+  //     .where("class_id", `${parentClassId}`)
+  //     .andWhere("class_id", Number(parentClassId))
+  //     .include("Instructor", (q) => {
+  //       q.deSelectAll().select([
+  //         "display_name",
+  //         "first_name",
+  //         "last_name",
+  //         "Instructor_Instructor_Image",
+  //       ]);
+  //     })
+  //     .include("Announcement_Reactors_Data", (q) => {
+  //       q.deSelectAll().select([
+  //         "id",
+  //         "announcement_reactor_id",
+  //         "contact_announcement_reactor_id",
+  //       ]);
+  //     })
+  //     .include("ForumComments", (q) => {
+  //       q.deSelectAll()
+  //         .select(["id", "comment"])
+  //         .include("Member_Comment_Upvotes_Data", (child) =>
+  //           child.deSelectAll().select(["id"])
+  //         )
+  //         .include("Author", (child) =>
+  //           child.deSelectAll().select(["display_name"])
+  //         )
+  //         .include("ForumComments", (child) => {
+  //           child
+  //             .deSelectAll()
+  //             .select(["id", "comment"])
+  //             .include("Member_Comment_Upvotes_Data", (grand) =>
+  //               grand.deSelectAll().select(["id"])
+  //             )
+  //             .include("Author", (grand) =>
+  //               grand.deSelectAll().select(["display_name"])
+  //             );
+  //         });
+  //     })
+  //     .noDestroy();
+  // }
 
-  async fetchAnnouncement() {
-    if (this._isFetchingAnnouncements) return;
-    this._isFetchingAnnouncements = true;
-    try {
-      await this.announcementQuery
-        .fetch()
-        .pipe(window.toMainInstance?.(true) ?? ((x) => x))
-        .toPromise();
-      this.renderAnnouncementState();
-    } catch (e) {
-      console.log("Error fetching announcements", e.error);
-      return [];
-    } finally {
-      this._isFetchingAnnouncements = false;
-    }
-  }
+  // async fetchAnnouncement() {
+  //   if (this._isFetchingAnnouncements) return;
+  //   this._isFetchingAnnouncements = true;
+  //   try {
+  //     await this.announcementQuery
+  //       .fetch()
+  //       .pipe(window.toMainInstance?.(true) ?? ((x) => x))
+  //       .toPromise();
+  //     this.renderAnnouncementState();
+  //   } catch (e) {
+  //     console.log("Error fetching announcements", e.error);
+  //     return [];
+  //   } finally {
+  //     this._isFetchingAnnouncements = false;
+  //   }
+  // }
 
   async fetchCourseContent() {
     try {
@@ -197,7 +197,7 @@ export class AWCModel {
     this.PostQuery = eduflowproForumPostmodel
       .query()
       .deSelectAll()
-      .select(["id"])
+      .select(["id", "forum_type"])
       .where("forum_status", "Published - Not flagged")
       .andWhere("parent_class_id", `${parentClassId}`)
       .orderBy("created_at", "desc")
@@ -330,15 +330,15 @@ export class AWCModel {
     if (modelUnsub) this.subscriptions.add(modelUnsub);
   }
 
-  setupAnnouncementModelSubscription() {
-    const modelUnsub = eduflowproForumPostmodel.subscribe?.({
-      next: (data) => {
-        // this.renderFromState()
-      },
-      error: () => {},
-    });
-    if (modelUnsub) this.subscriptions.add(modelUnsub);
-  }
+  // setupAnnouncementModelSubscription() {
+  //   const modelUnsub = eduflowproForumPostmodel.subscribe?.({
+  //     next: (data) => {
+  //       // this.renderFromState()
+  //     },
+  //     error: () => {},
+  //   });
+  //   if (modelUnsub) this.subscriptions.add(modelUnsub);
+  // }
 
   async fetchEnrolmentProgress(enrolmentId = this.enrolmentId) {
     const id = Number(enrolmentId);
@@ -492,7 +492,7 @@ export class AWCModel {
     return await mutation.execute(true).toPromise();
   }
 
-  async createPost({ authorId, copy, fileMeta }) {
+  async createPost({ authorId, copy, fileMeta, forumType }) {
     const postquery = eduflowproForumPostmodel.mutation();
     const payload = {
       published_date: Math.floor(Date.now() / 1000).toString(),
@@ -500,6 +500,7 @@ export class AWCModel {
       copy,
       parent_class_id: parentClassId,
       forum_status: "Published - Not flagged",
+      forum_type: forumType,
     };
     if (fileMeta && fileMeta.file_link) {
       payload.file_name = fileMeta.file_name;
