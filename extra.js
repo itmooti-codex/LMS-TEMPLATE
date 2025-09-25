@@ -10,6 +10,7 @@ const label = button?.querySelector(".button-label");
 
 const { slug, apiKey } = config;
 let completionModelPromise;
+let lessonModelPromise;
 
 const getCompletionModel = async () => {
   if (!completionModelPromise) {
@@ -25,6 +26,20 @@ const getCompletionModel = async () => {
       });
   }
   return completionModelPromise;
+};
+
+const getLessonModel = async () => {
+  if (!lessonModelPromise) {
+    const sdk = new VitalStatsSDK({ slug, apiKey });
+    lessonModelPromise = sdk
+      .initialize()
+      .then((plugin) => plugin.switchTo("EduflowproLesson"))
+      .catch((err) => {
+        lessonModelPromise = null;
+        throw err;
+      });
+  }
+  return lessonModelPromise;
 };
 
 fetchCompletedLesson();
@@ -156,3 +171,48 @@ function showLoader() {
 function hideLoader() {
   document.getElementById("loaderModal").style.display = "none";
 }
+
+async function getLessonDetailsById(id = lessonId) {
+  if (!id) return null;
+  try {
+    const lessonModel = await getLessonModel();
+    const query = lessonModel
+      .query()
+      .deSelectAll()
+      .select()
+      .where("id", Number(id))
+      .include("Assessment", (child) =>
+        child
+          .deSelectAll()
+          .select(["id", "assessment_details", "rubric_information"])
+      );
+
+    const payload = await query
+      .noDestroy()
+      .fetch()
+      .pipe(window.toMainInstance?.(true) ?? ((x) => x))
+      .toPromise();
+
+    const records = Array.isArray(payload?.records)
+      ? payload.records
+      : query.getAllRecordsArray?.() ?? [];
+
+    return records?.[0] ?? null;
+  } catch (err) {
+    console.error("Failed to fetch lesson details", err);
+    return null;
+  }
+}
+
+async function getLessonAssessmentById(id = lessonId) {
+  const details = await getLessonDetailsById(id);
+  if (details) {
+    window.lessonDetails = details;
+    window.lessonAssessment = details?.Assessment ?? null;
+  }
+  return details?.Assessment ?? null;
+}
+
+getLessonAssessmentById().catch((err) =>
+  console.error("Failed to fetch lesson assessment", err)
+);
