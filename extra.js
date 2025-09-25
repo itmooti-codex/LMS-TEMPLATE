@@ -206,8 +206,8 @@ async function getLessonDetailsById(id = lessonId) {
 async function getLessonAssessmentById(id = lessonId) {
   const details = await getLessonDetailsById(id);
   if (details) {
-    window.lessonDetails = details;
-    window.lessonAssessment = details?.Assessment ?? null;
+    window.rubric_information = details?.Assessment?.rubric_information ?? null;
+    window.lesson_details = details?.Assessment?.assessment_details ?? null;
   }
   return details?.Assessment ?? null;
 }
