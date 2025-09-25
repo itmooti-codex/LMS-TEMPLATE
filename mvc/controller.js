@@ -15,6 +15,7 @@ export class AWCController {
     this.allAnnouncements = [];
     this.enrolmentId = Number(window.enrolmentId ?? 1);
     this.modules = [];
+    this.lastClickedTab = "";
     this.progressState = {
       enrolmentId: this.enrolmentId,
       lastLessonId: null,
@@ -161,7 +162,18 @@ export class AWCController {
           this.allAnnouncements = this.allForumPosts?.filter(
             (item) => item.forum_type == "Announcement"
           );
-          this.view.renderPosts(this.allForumPosts);
+
+          if (
+            this.lastClickedTab == "" ||
+            this.lastClickedTab == "all-posts-tab"
+          ) {
+            this.view.renderPosts(this.allForumPosts);
+          } else if (this.lastClickedTab == "my-posts-tab") {
+            this.view.renderPosts(this.myForumPosts);
+          } else if (this.lastClickedTab == "announcements-tab") {
+            this.view.renderPosts(this.allAnnouncements);
+          }
+
           this.view.initAudioPlayers();
         } catch (err) {
           console.error("Error mapping/rendering posts:", err);
@@ -682,7 +694,7 @@ export class AWCController {
       myPostBtn.classList.add("activeTab");
       allPostBtn.classList.remove("activeTab");
       announcementBtn.classList.remove("activeTab");
-      // Always visible on forum tabs
+      this.lastClickedTab = "my-posts-tab";
       if (createPostSection) createPostSection.style.removeProperty("display");
     });
     allPostBtn.addEventListener("click", () => {
@@ -690,7 +702,7 @@ export class AWCController {
       allPostBtn.classList.add("activeTab");
       myPostBtn.classList.remove("activeTab");
       announcementBtn.classList.remove("activeTab");
-      // Always visible on forum tabs
+      this.lastClickedTab = "all-posts-tab";
       if (createPostSection) createPostSection.style.removeProperty("display");
     });
     announcementBtn.addEventListener("click", () => {
@@ -698,7 +710,7 @@ export class AWCController {
       announcementBtn.classList.add("activeTab");
       allPostBtn.classList.remove("activeTab");
       myPostBtn.classList.remove("activeTab");
-      // Show only for teachers on announcement tab
+      this.lastClickedTab = "announcements-tab";
       const role = getRole();
       if (createPostSection) {
         if (role === "teacher") {
