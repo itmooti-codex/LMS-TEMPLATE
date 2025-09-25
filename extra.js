@@ -1,6 +1,8 @@
 import { config } from "./sdk/config.js";
 import { VitalStatsSDK } from "./sdk/init.js";
 import { showLoader, hideLoader } from "./utils/helper.js";
+import { createLoaderModal } from "./utils/helper.js";
+createLoaderModal();
 
 const button = document.getElementById("complete-lesson-button");
 const feedback = document.getElementById("lesson-complete-feedback");
