@@ -26,6 +26,8 @@ const getCompletionModel = async () => {
   return completionModelPromise;
 };
 
+fetchCompletedLesson();
+
 // --- Helpers ---
 const setButtonState = (state, text, addClasses = [], removeClasses = []) => {
   if (!button || !label) return;
@@ -115,7 +117,7 @@ if (button && label) {
 }
 
 // --- Check if already completed ---
-(async function fetchCompletedLesson() {
+async function fetchCompletedLesson() {
   try {
     const completionModel = await getCompletionModel();
     const query = completionModel
@@ -144,7 +146,7 @@ if (button && label) {
   } finally {
     hideLoader();
   }
-})();
+}
 
 function showLoader() {
   document.getElementById("loaderModal").style.display = "flex";
