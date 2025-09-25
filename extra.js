@@ -1,12 +1,13 @@
 import { config } from "./sdk/config.js";
 import { VitalStatsSDK } from "./sdk/init.js";
+showLoader();
 
 const button = document.getElementById("complete-lesson-button");
 const feedback = document.getElementById("lesson-complete-feedback");
 const label = button?.querySelector(".button-label");
 
 // --- SDK init caching ---
-showLoader();
+
 const { slug, apiKey } = config;
 let completionModelPromise;
 
