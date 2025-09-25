@@ -179,8 +179,6 @@ async function getLessonDetailsById(id = lessonId) {
     const lessonModel = await getLessonModel();
     const query = lessonModel
       .query()
-      .deSelectAll()
-      .select()
       .where("id", id)
       .include("Assessment", (child) =>
         child
